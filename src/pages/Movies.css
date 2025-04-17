@@ -1,0 +1,93 @@
+/* Base dark theme page styling */
+.movies-page {
+  padding: 2rem;
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+/* Infinite scroll grid */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+/* Top section container */
+.section {
+  margin-bottom: 3rem;
+}
+
+/* Row header and buttons layout */
+.row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+/* Scroll wrapper with overlay */
+.movie-scroll-wrapper {
+  position: relative;
+}
+
+/* Horizontal scrolling movie row */
+.movie-scroll-row {
+  overflow-x: auto;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.movie-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* SCROLL BUTTONS DARKER + TRANSPARENT */
+.scroll-buttons {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Optional: auto-hide buttons */
+.movie-scroll-wrapper:hover .scroll-buttons {
+  opacity: 1;
+}
+
+.scroll-buttons button {
+  background-color: rgba(0, 0, 0, 0.35); /* darker than before */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 1.5rem;
+  color: #eaeaea;
+  padding: 0.6rem 1rem;
+  border-radius: 50%;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background-color 0.3s ease, transform 0.2s;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.scroll-buttons button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Loader alignment */
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 0;
+}

@@ -1,0 +1,122 @@
+:root {
+    --bg-dark: #121212;
+    --nav-bg: #1f1f1f;
+    --text-light: #ffffff;
+    --accent: #999999; /* soft gray */
+    --accent-hover: #bfbfbf;
+    --btn-gradient-start: #a855f7;
+    --btn-gradient-end: #ec4899;
+  }
+  
+  /* Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    overflow-x: hidden;
+  }
+  
+  /* NAVBAR */
+  
+  .navbar {
+    width: 100%;
+    background-color: var(--nav-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--accent);
+  }
+  
+  .nav-center {
+    display: flex;
+    gap: 2.5rem;
+    justify-content: center;
+    flex: 1;
+  }
+  
+  .nav-center a {
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.3s;
+  }
+  
+  .nav-center a:hover {
+    color: var(--accent);
+  }
+  
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .btn-signin {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.4rem 0.8rem;
+    transition: color 0.3s ease;
+  }
+  
+  .btn-signin:hover {
+    color: var(--accent);
+  }
+  
+  /* Gradient Outline Button */
+  .btn-outline-gradient {
+    position: relative;
+    padding: 0.5rem 1.4rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+    background-color: transparent;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    z-index: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-outline-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--btn-gradient-start), var(--btn-gradient-end));
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    z-index: -1;
+  }
+  
+  .btn-outline-gradient:hover {
+    color: var(--accent);
+    opacity: 0.9;
+  }
+  

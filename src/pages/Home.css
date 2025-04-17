@@ -1,0 +1,74 @@
+:root {
+    --bg-dark: #121212;
+    --text-light: #ffffff;
+    --accent: #999999; /* soft gray */
+    --accent-hover: #bfbfbf;
+  }
+  
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+  }
+  
+  .home-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  /* Hero Section */
+  .hero {
+    text-align: left;
+    padding: 5rem 3rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  
+  .hero h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+  
+  .hero p {
+    font-size: 1.1rem;
+    color: #cccccc;
+    margin-bottom: 2rem;
+  }
+  
+  .hero-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  
+  .btn-primary {
+    background-color: var(--accent);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--accent-hover);
+  }
+  
+  .btn-outline {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  
+  .btn-outline:hover {
+    background-color: var(--accent);
+    color: white;
+  }
+  
