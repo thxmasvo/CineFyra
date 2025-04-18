@@ -39,3 +39,15 @@
   font-size: 0.85rem;
   color: #ccc;
 }
+
+.ring-fill.ring-high {
+  stroke: #21d07a; /* Green */
+}
+
+.ring-fill.ring-mid {
+  stroke: #fca311; /* Orange */
+}
+
+.ring-fill.ring-low {
+  stroke: #db2360; /* Red */
+}

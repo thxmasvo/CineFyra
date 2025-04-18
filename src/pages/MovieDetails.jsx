@@ -40,12 +40,17 @@ export default function MovieDetails() {
     principals = [],
   } = movie;
 
-  const getRating = (source) => {
-    const found = ratings?.find((r) =>
-      r.source.toLowerCase().includes(source.toLowerCase())
-    );
-    return found ? found.value : 'N/A';
-  };
+ const getRating = (source) => {
+   const sourceMap = {
+     imdb: 'Internet Movie Database',
+     rotten: 'Rotten Tomatoes',
+     metacritic: 'Metacritic'
+   };
+
+   const target = sourceMap[source.toLowerCase()];
+   const found = ratings?.find((r) => r.source === target);
+   return found ? found.value : 'N/A';
+ };
 
   const formatCurrency = (value) =>
     value ? `$${value.toLocaleString()}` : 'N/A';

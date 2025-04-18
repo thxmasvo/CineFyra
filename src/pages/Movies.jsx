@@ -3,13 +3,13 @@ import { getMovies, getMovieDetails } from '../api';
 import MovieCard from '../components/MovieCard';
 import Loader from '../components/Loader';
 import '../Styles/Movies.css';
-
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
 const DEBOUNCE_DELAY = 500;
 const MAX_CONCURRENT = 4;
 const MAX_SEARCH_RESULTS = 20;
+const MIN_FETCH_DURATION = 1000;
 
 export default function Movies() {
   const [searchTitle, setSearchTitle] = useState('');
@@ -26,6 +26,7 @@ export default function Movies() {
   const enrichedCache = useRef(new Map());
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
+  const requestIdRef = useRef(0);
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -72,17 +73,22 @@ export default function Movies() {
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
     const shouldAbort = () => abortRef.current.signal.aborted;
+    const currentRequestId = ++requestIdRef.current;
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
+      const startTime = Date.now();
       NProgress.start();
       setLoading(true);
+
       try {
         if (title.trim()) {
           setSearchPage(2);
           const enriched = await fetchMoviesWithEnrichment(title, 1, shouldAbort, MAX_SEARCH_RESULTS);
-          if (!shouldAbort()) {
+          const elapsed = Date.now() - startTime;
+          if (elapsed < MIN_FETCH_DURATION) await delay(MIN_FETCH_DURATION - elapsed);
+          if (!shouldAbort() && currentRequestId === requestIdRef.current) {
             setSearchResults(enriched);
             setCuratedMovies([]);
             setAllMovies([]);
@@ -90,7 +96,7 @@ export default function Movies() {
           }
         } else {
           const enriched = await fetchMoviesWithEnrichment('', 1, shouldAbort);
-          if (!shouldAbort()) {
+          if (!shouldAbort() && currentRequestId === requestIdRef.current) {
             setCuratedMovies(enriched);
             setSearchResults([]);
             setAllMovies([]);
@@ -101,7 +107,7 @@ export default function Movies() {
       } catch (err) {
         if (!shouldAbort()) console.error('❌ Load failed', err);
       } finally {
-        if (!shouldAbort()) {
+        if (!shouldAbort() && currentRequestId === requestIdRef.current) {
           setLoading(false);
           NProgress.done();
         }
@@ -116,37 +122,47 @@ export default function Movies() {
 
   const fetchNextPage = useCallback(async () => {
     if (loading || !hasMore || searchTitle.trim()) return;
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     NProgress.start();
 
     try {
       const enriched = await fetchMoviesWithEnrichment('', page);
-      setAllMovies(prev => [...prev, ...enriched]);
-      setPage(prev => prev + 1);
-      if (enriched.length < 100) setHasMore(false);
+      if (requestIdRef.current === currentRequestId) {
+        setAllMovies(prev => [...prev, ...enriched]);
+        setPage(prev => prev + 1);
+        if (enriched.length < 100) setHasMore(false);
+      }
     } catch (err) {
       console.error('❌ Pagination load failed', err);
     } finally {
-      setLoading(false);
-      NProgress.done();
+      if (requestIdRef.current === currentRequestId) {
+        setLoading(false);
+        NProgress.done();
+      }
     }
   }, [page, loading, hasMore, searchTitle]);
 
   const fetchNextSearchPage = useCallback(async () => {
     if (!searchTitle.trim() || loading || !hasMore) return;
+    const currentRequestId = ++requestIdRef.current;
     setLoading(true);
     NProgress.start();
 
     try {
       const enriched = await fetchMoviesWithEnrichment(searchTitle, searchPage);
-      setSearchResults(prev => [...prev, ...enriched]);
-      setSearchPage(prev => prev + 1);
-      if (enriched.length < MAX_SEARCH_RESULTS) setHasMore(false);
+      if (requestIdRef.current === currentRequestId) {
+        setSearchResults(prev => [...prev, ...enriched]);
+        setSearchPage(prev => prev + 1);
+        if (enriched.length < MAX_SEARCH_RESULTS) setHasMore(false);
+      }
     } catch (err) {
       console.error('❌ Search pagination failed', err);
     } finally {
-      setLoading(false);
-      NProgress.done();
+      if (requestIdRef.current === currentRequestId) {
+        setLoading(false);
+        NProgress.done();
+      }
     }
   }, [searchTitle, searchPage, loading, hasMore]);
 
@@ -174,7 +190,6 @@ export default function Movies() {
 
   const applySortAndFilter = useCallback((movies) => {
     let filtered = [...movies];
-
     if (selectedYear) {
       filtered = filtered.filter(m => String(m.year) === selectedYear);
     }
@@ -230,11 +245,9 @@ export default function Movies() {
               className="filter-select"
             >
               <option value="">Any Year</option>
-              {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i)
-                .reverse()
-                .map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
+              {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i).reverse().map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
             </select>
 
             <select
