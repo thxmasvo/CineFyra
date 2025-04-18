@@ -1,5 +1,6 @@
 import React from 'react';
-import './Navbar.css'; // Make sure this is the correct path to your CSS
+import '../Styles/Navbar.css';
+
 
 function Navbar() {
   return (
@@ -7,7 +8,7 @@ function Navbar() {
       {/* Left Logo */}
       <div className="nav-left">
         <img src="/assets/react.svg" alt="Logo" className="logo-img" />
-        <span className="logo-text">MovieVerse</span>
+        <span className="logo-text">CineFyra</span>
       </div>
 
       {/* Center Links */}

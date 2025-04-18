@@ -2,7 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { getMovies, getMovieDetails } from '../api';
 import MovieCard from '../components/MovieCard';
 import Loader from '../components/Loader';
-import './movies.css';
+import '../Styles/Movies.css';
+
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
@@ -12,10 +13,13 @@ const MAX_SEARCH_RESULTS = 20;
 
 export default function Movies() {
   const [searchTitle, setSearchTitle] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [sortOption, setSortOption] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [curatedMovies, setCuratedMovies] = useState([]);
   const [allMovies, setAllMovies] = useState([]);
   const [page, setPage] = useState(1);
+  const [searchPage, setSearchPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
@@ -55,7 +59,7 @@ export default function Movies() {
           enrichedCache.current.set(movie.imdbID, full);
           enriched.push(full);
         } catch {
-          enriched.push(movie); // fallback
+          enriched.push(movie);
         }
       }
     });
@@ -76,12 +80,13 @@ export default function Movies() {
       setLoading(true);
       try {
         if (title.trim()) {
+          setSearchPage(2);
           const enriched = await fetchMoviesWithEnrichment(title, 1, shouldAbort, MAX_SEARCH_RESULTS);
           if (!shouldAbort()) {
             setSearchResults(enriched);
             setCuratedMovies([]);
             setAllMovies([]);
-            setHasMore(false);
+            setHasMore(enriched.length >= MAX_SEARCH_RESULTS);
           }
         } else {
           const enriched = await fetchMoviesWithEnrichment('', 1, shouldAbort);
@@ -127,21 +132,72 @@ export default function Movies() {
     }
   }, [page, loading, hasMore, searchTitle]);
 
+  const fetchNextSearchPage = useCallback(async () => {
+    if (!searchTitle.trim() || loading || !hasMore) return;
+    setLoading(true);
+    NProgress.start();
+
+    try {
+      const enriched = await fetchMoviesWithEnrichment(searchTitle, searchPage);
+      setSearchResults(prev => [...prev, ...enriched]);
+      setSearchPage(prev => prev + 1);
+      if (enriched.length < MAX_SEARCH_RESULTS) setHasMore(false);
+    } catch (err) {
+      console.error('❌ Search pagination failed', err);
+    } finally {
+      setLoading(false);
+      NProgress.done();
+    }
+  }, [searchTitle, searchPage, loading, hasMore]);
+
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !loading) {
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
+      if (!nearBottom || loading) return;
+
+      if (searchTitle.trim()) {
+        fetchNextSearchPage();
+      } else {
         fetchNextPage();
       }
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [fetchNextPage, loading]);
+  }, [fetchNextPage, fetchNextSearchPage, loading, searchTitle]);
 
   const normalizeGenres = (genres) => {
     if (Array.isArray(genres)) return genres.map(g => g.trim());
     if (typeof genres === 'string') return genres.split(',').map(g => g.trim());
     return [];
   };
+
+  const applySortAndFilter = useCallback((movies) => {
+    let filtered = [...movies];
+
+    if (selectedYear) {
+      filtered = filtered.filter(m => String(m.year) === selectedYear);
+    }
+
+    switch (sortOption) {
+      case 'az':
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'za':
+        filtered.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+      case 'rating':
+        filtered.sort((a, b) => parseFloat(b.imdbRating || 0) - parseFloat(a.imdbRating || 0));
+        break;
+      case 'year':
+        filtered.sort((a, b) => b.year - a.year);
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }, [sortOption, selectedYear]);
 
   const topRated = curatedMovies.filter(m => parseFloat(m.imdbRating) >= 7.6).slice(0, 10);
   const horror = curatedMovies.filter(m => normalizeGenres(m.genres).includes('Horror')).slice(0, 10);
@@ -152,9 +208,12 @@ export default function Movies() {
     if (container) container.scrollBy({ left: dir === 'left' ? -400 : 400, behavior: 'smooth' });
   };
 
+  const displayedSearchResults = applySortAndFilter(searchResults);
+  const displayedAllMovies = applySortAndFilter(allMovies);
+
   return (
     <div className="movies-page">
-      <div className="search-bar-container">
+      <div className="search-container">
         <input
           type="text"
           placeholder="Search by title..."
@@ -162,19 +221,48 @@ export default function Movies() {
           onChange={(e) => setSearchTitle(e.target.value)}
           className="search-input"
         />
+
+        {searchTitle.trim() !== '' && (
+          <div className="filters-row">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Any Year</option>
+              {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i)
+                .reverse()
+                .map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+            </select>
+
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Sort</option>
+              <option value="az">A–Z</option>
+              <option value="za">Z–A</option>
+              <option value="rating">IMDb Rating</option>
+              <option value="year">Year</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <h1>Movie Explorer 🎬</h1>
 
       {searchTitle.trim() !== '' ? (
         <>
-          {searchResults.length === 0 && !loading ? (
+          {displayedSearchResults.length === 0 && !loading ? (
             <p style={{ textAlign: 'center', marginTop: '2rem' }}>
               🔍 No results found for "{searchTitle}"
             </p>
           ) : (
             <div className="movie-grid">
-              {searchResults.map((movie) => (
+              {displayedSearchResults.map((movie) => (
                 <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} />
               ))}
             </div>
@@ -199,7 +287,7 @@ export default function Movies() {
 
               <h2 style={{ marginTop: '3rem' }}>All Movies (Scroll to Load More)</h2>
               <div className="movie-grid">
-                {allMovies.map((movie) => (
+                {displayedAllMovies.map((movie) => (
                   <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} />
                 ))}
               </div>

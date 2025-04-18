@@ -2,7 +2,8 @@ import './index.css';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/home';
-import Movies from './pages/movies.jsx'; // ✅ Make sure the path is correct (capital "M")
+import Movies from './pages/movies.jsx';
+import MovieDetails from './pages/MovieDetails.jsx'; // ✅ Import the MovieDetails page
 
 function App() {
   return (
@@ -10,7 +11,8 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/movies" element={<Movies />} /> {/* ✅ Add this line */}
+        <Route path="/movies" element={<Movies />} />
+        <Route path="/movies/:imdbID" element={<MovieDetails />} /> {/* ✅ Individual movie route */}
       </Routes>
     </>
   );

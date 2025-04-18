@@ -1,0 +1,41 @@
+/* components/ScoreRing.css */
+.score-ring-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+}
+
+.score-ring {
+  width: 80px;
+  height: 80px;
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #333;
+  stroke-width: 10;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: #fca311; /* Rotten Tomatoes orange */
+  stroke-width: 10;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.score-text {
+  fill: #fca311;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.ring-label {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: #ccc;
+}

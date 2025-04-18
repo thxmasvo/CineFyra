@@ -1,27 +1,30 @@
+/* Overall page styling */
 .movies-page {
   padding: 2rem;
   background-color: #121212;
   color: #f0f0f0;
 }
 
-/* Sticky Search Bar */
-.search-bar-container {
+/* Search Bar Container */
+.search-container {
   position: sticky;
   top: 0;
   z-index: 20;
   background-color: #121212;
-  padding: 1rem 0;
+  padding: 1.2rem 0 0.5rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+/* Search Input */
 .search-input {
   width: 90%;
-  max-width: 500px;
-  padding: 0.75rem 1.2rem;
+  max-width: 600px;
+  padding: 0.8rem 1.4rem;
   font-size: 1rem;
-  border-radius: 30px;
+  border-radius: 999px;
   border: none;
   outline: none;
   background-color: #1e1e1e;
@@ -34,6 +37,35 @@
   box-shadow: 0 0 0 2px #ffffff30;
 }
 
+/* Filters below search */
+.filters-row {
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+  box-shadow: 0 0 0 1px #444;
+  appearance: none;
+  transition: all 0.3s ease;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+  border-color: #c99cff;
+  outline: none;
+  background-color: #272727;
+}
+
+/* Movie Card Grid */
 .movie-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -41,6 +73,7 @@
   margin-top: 2rem;
 }
 
+/* Section headers like Top Rated */
 .section {
   margin-bottom: 3rem;
 }
@@ -52,6 +85,7 @@
   margin-bottom: 0.5rem;
 }
 
+/* Horizontal Scroll Area */
 .movie-scroll-wrapper {
   position: relative;
   display: flex;
@@ -72,6 +106,7 @@
   display: none;
 }
 
+/* Scroll Buttons */
 .scroll-button {
   position: absolute;
   top: 50%;
@@ -104,10 +139,10 @@
   right: 0;
 }
 
+/* Loading spinner alignment */
 .loader-container {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 4rem 0;
 }
-

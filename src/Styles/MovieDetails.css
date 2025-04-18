@@ -1,0 +1,160 @@
+.details-container {
+  padding: 2rem;
+  background-color: #111;
+  color: #eee;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.details-header {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.details-poster {
+  width: 240px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+}
+
+.details-info {
+  flex: 1;
+  min-width: 300px;
+}
+
+.details-info h1 {
+  margin-bottom: 0.5rem;
+  font-size: 2.2rem;
+}
+
+.plot {
+  font-style: italic;
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+.meta p {
+  margin: 0.3rem 0;
+}
+
+.genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.tag {
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: white;
+}
+
+/* Color-coded genres */
+.genre-horror     { background: #e74c3c; }
+.genre-drama      { background: #3498db; }
+.genre-comedy     { background: #f1c40f; color: #111; }
+.genre-action     { background: #e67e22; }
+.genre-adventure  { background: #16a085; }
+.genre-romance    { background: #ff69b4; }
+.genre-thriller   { background: #9b59b6; }
+.genre-animation  { background: #2ecc71; }
+.genre-fantasy    { background: #8e44ad; }
+.genre-crime      { background: #34495e; }
+.genre-mystery    { background: #7f8c8d; }
+.genre-biography  { background: #27ae60; }
+
+.ratings-ring {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.ring {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.ring svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(-90deg);
+  width: 60px;
+  height: 60px;
+}
+
+.ring svg circle {
+  fill: none;
+  stroke: #333;
+  stroke-width: 4;
+  r: 28;
+  cx: 30;
+  cy: 30;
+}
+
+.ring svg circle:nth-child(2) {
+  stroke: #f39c12;
+  stroke-dasharray: 176;
+  stroke-linecap: round;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.score-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-weight: bold;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  color: #f39c12;
+}
+
+.ring-label {
+  display: block;
+  margin-top: 70px;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.other-ratings p {
+  margin: 0.2rem 0;
+}
+
+.cast-heading {
+  margin-top: 3rem;
+  font-size: 1.6rem;
+}
+
+.cast-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: #181818;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+.cast-table th,
+.cast-table td {
+  padding: 0.9rem 1.2rem;
+  text-align: left;
+}
+
+.cast-table th {
+  background-color: #222;
+  color: #f0f0f0;
+  font-weight: bold;
+}
+
+.cast-table tr:nth-child(even) {
+  background-color: #1a1a1a;
+}
