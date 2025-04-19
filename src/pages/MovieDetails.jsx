@@ -1,31 +1,62 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getMovieDetails } from '../api';
 import Loader from '../components/Loader';
 import '../Styles/MovieDetails.css';
 
 export default function MovieDetails() {
   const { imdbID } = useParams();
+  const navigate = useNavigate();
+
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!imdbID) return;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+    let isCancelled = false;
+
+    // Reset on mount
+    setMovie(null);
+    setLoading(true);
+    setError(false);
+
     const fetchDetails = async () => {
       try {
-        const data = await getMovieDetails(imdbID);
-        setMovie(data);
-      } catch (error) {
-        console.error('❌ Failed to load movie details', error);
+        const data = await getMovieDetails(imdbID, signal);
+        console.log('🧾 Raw movie data:', data);
+
+        if (!isCancelled && data?.title) {
+          setMovie(data);
+        } else if (!isCancelled) {
+          setError(true);
+        }
+      } catch (err) {
+        if (!isCancelled && err.name !== 'AbortError') {
+          console.error('❌ getMovieDetails failed:', err);
+          setError(true);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) setLoading(false);
       }
     };
 
     fetchDetails();
+
+    return () => {
+      isCancelled = true;
+      controller.abort();
+    };
   }, [imdbID]);
 
+  if (!imdbID) return null;
   if (loading) return <Loader />;
-  if (!movie) return <p className="error-message">Movie not found</p>;
+  if (error || !movie || !movie.title) {
+    return <p className="error-message">🎥 Movie not found or failed to load.</p>;
+  }
 
   const {
     title,
@@ -40,28 +71,30 @@ export default function MovieDetails() {
     principals = [],
   } = movie;
 
- const getRating = (source) => {
-   const sourceMap = {
-     imdb: 'Internet Movie Database',
-     rotten: 'Rotten Tomatoes',
-     metacritic: 'Metacritic'
-   };
+  const getRating = (source) => {
+    const sourceMap = {
+      imdb: 'Internet Movie Database',
+      rotten: 'Rotten Tomatoes',
+      metacritic: 'Metacritic',
+    };
+    const target = sourceMap[source.toLowerCase()];
+    const found = ratings?.find((r) => r.source === target);
+    return found ? found.value : 'N/A';
+  };
 
-   const target = sourceMap[source.toLowerCase()];
-   const found = ratings?.find((r) => r.source === target);
-   return found ? found.value : 'N/A';
- };
-
-  const formatCurrency = (value) =>
-    value ? `$${value.toLocaleString()}` : 'N/A';
-
-  // Extract Rotten Tomatoes rating as a percentage number
-  const rottenRaw = getRating('rotten'); // e.g., "96" or "96%"
+  const rottenRaw = getRating('rotten');
   const rottenClean = parseFloat(rottenRaw?.toString().replace('%', ''));
   const ringPercent = !isNaN(rottenClean) ? rottenClean : null;
 
+  const formatCurrency = (value) =>
+    typeof value === 'number' ? `$${value.toLocaleString()}` : 'N/A';
+
   return (
     <div className="details-container">
+      <button onClick={() => navigate(-1)} className="back-button" style={{ marginTop: '70px' }}>
+        ← Back
+      </button>
+
       <div className="details-header">
         <img className="details-poster" src={poster} alt={`${title} poster`} />
         <div className="details-info">
@@ -73,13 +106,13 @@ export default function MovieDetails() {
             <p><strong>Country:</strong> {country}</p>
             <p><strong>Box Office:</strong> {formatCurrency(boxoffice)}</p>
           </div>
+
           <div className="genre-tags">
             {genres?.map((g, idx) => (
               <span key={idx} className={`tag genre-${g.toLowerCase()}`}>{g}</span>
             ))}
           </div>
 
-          {/* 🔄 Rotten Tomatoes in Score Ring */}
           <div className="ratings-ring">
             <div className="ring">
               <div className="score-text">
@@ -92,9 +125,10 @@ export default function MovieDetails() {
                   cy="30"
                   r="28"
                   style={{
-                    strokeDashoffset: ringPercent !== null
-                      ? 176 - (ringPercent / 100) * 176
-                      : 176
+                    strokeDashoffset:
+                      ringPercent !== null
+                        ? 176 - (ringPercent / 100) * 176
+                        : 176,
                   }}
                 />
               </svg>

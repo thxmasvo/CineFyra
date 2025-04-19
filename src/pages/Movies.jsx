@@ -7,9 +7,11 @@ import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
 const DEBOUNCE_DELAY = 500;
-const MAX_CONCURRENT = 4;
 const MAX_SEARCH_RESULTS = 20;
 const MIN_FETCH_DURATION = 1000;
+const MAX_CONCURRENT = 4;
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 500;
 
 export default function Movies() {
   const [searchTitle, setSearchTitle] = useState('');
@@ -41,31 +43,41 @@ export default function Movies() {
       if (limit) filtered = filtered.slice(0, limit);
     }
 
-    let i = 0;
     const enriched = [];
+    let currentIndex = 0;
 
-    const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
-      while (i < filtered.length && !shouldAbort()) {
-        const idx = i++;
-        const movie = filtered[idx];
+    const fetchWithRetry = async (movie, retries = MAX_RETRIES) => {
+      try {
+        if (shouldAbort()) return movie;
+        const details = await getMovieDetails(movie.imdbID);
+        if (details?.title) return { ...movie, ...details };
+      } catch {
+        if (retries > 0) {
+          await delay(RETRY_DELAY);
+          return fetchWithRetry(movie, retries - 1);
+        }
+      }
+      return movie; // fallback
+    };
 
+    const worker = async () => {
+      while (currentIndex < filtered.length && !shouldAbort()) {
+        const i = currentIndex++;
+        const movie = filtered[i];
         if (enrichedCache.current.has(movie.imdbID)) {
-          enriched.push(enrichedCache.current.get(movie.imdbID));
+          enriched[i] = enrichedCache.current.get(movie.imdbID);
           continue;
         }
 
-        try {
-          const details = await getMovieDetails(movie.imdbID);
-          const full = { ...movie, ...details };
-          enrichedCache.current.set(movie.imdbID, full);
-          enriched.push(full);
-        } catch {
-          enriched.push(movie);
-        }
+        const enrichedMovie = await fetchWithRetry(movie);
+        enrichedCache.current.set(movie.imdbID, enrichedMovie);
+        enriched[i] = enrichedMovie;
       }
-    });
+    };
 
+    const workers = Array.from({ length: MAX_CONCURRENT }, () => worker());
     await Promise.all(workers);
+
     return enriched;
   };
 
