@@ -6,26 +6,23 @@ export function getMovies(title = '', year = '', page = 1, signal) {
   params.append('page', page);
 
   return fetch(`${baseUrl}?${params.toString()}`, { signal })
-    .then(res => {
-      if (!res.ok) throw new Error(`Failed to fetch movies (${res.status})`);
-      return res.json();
-    })
+    .then(res => res.json())
     .then(res => res.data || []);
 }
 
-export function getMovieDetails(imdbID, signal) {
-  return fetch(`http://4.237.58.241:3000/movies/data/${imdbID}`, { signal })
-    .then(res => {
-      if (res.status === 429) throw new Error('Too many requests');
-      if (!res.ok) throw new Error('Failed to fetch details');
-      return res.json();
-    })
-    .then(data => {
-      if (!data || !data.title) throw new Error('Invalid movie data');
-      return data;
-    })
-    .catch(err => {
-      console.error(`getMovieDetails failed for ${imdbID}:`, err.message);
-      return {}; // fallback
-    });
+export async function getMovieDetails(imdbID) {
+  const url = `http://4.237.58.241:3000/movies/data/${imdbID}`;
+  try {
+    const res = await fetch(url);
+    if (res.status === 429) {
+      console.warn(`⏳ Rate limit hit for ${imdbID}. Retrying after delay...`);
+      await new Promise(res => setTimeout(res, 1000)); // wait 1s
+      return getMovieDetails(imdbID); // retry once
+    }
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
+  } catch (err) {
+    console.error(`getMovieDetails failed for ${imdbID}:`, err.message);
+    throw err;
+  }
 }

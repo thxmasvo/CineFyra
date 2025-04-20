@@ -7,11 +7,9 @@ import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
 const DEBOUNCE_DELAY = 500;
-const MAX_SEARCH_RESULTS = 20;
-const MIN_FETCH_DURATION = 1000;
 const MAX_CONCURRENT = 4;
-const MAX_RETRIES = 2;
-const RETRY_DELAY = 500;
+const MAX_SEARCH_RESULTS = 10;
+const MIN_FETCH_DURATION = 1000;
 
 export default function Movies() {
   const [searchTitle, setSearchTitle] = useState('');
@@ -19,8 +17,6 @@ export default function Movies() {
   const [sortOption, setSortOption] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [curatedMovies, setCuratedMovies] = useState([]);
-  const [allMovies, setAllMovies] = useState([]);
-  const [page, setPage] = useState(1);
   const [searchPage, setSearchPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -43,41 +39,32 @@ export default function Movies() {
       if (limit) filtered = filtered.slice(0, limit);
     }
 
+    let i = 0;
     const enriched = [];
-    let currentIndex = 0;
 
-    const fetchWithRetry = async (movie, retries = MAX_RETRIES) => {
-      try {
-        if (shouldAbort()) return movie;
-        const details = await getMovieDetails(movie.imdbID);
-        if (details?.title) return { ...movie, ...details };
-      } catch {
-        if (retries > 0) {
-          await delay(RETRY_DELAY);
-          return fetchWithRetry(movie, retries - 1);
-        }
-      }
-      return movie; // fallback
-    };
+    const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
+      while (i < filtered.length && !shouldAbort()) {
+        const idx = i++;
+        const movie = filtered[idx];
 
-    const worker = async () => {
-      while (currentIndex < filtered.length && !shouldAbort()) {
-        const i = currentIndex++;
-        const movie = filtered[i];
         if (enrichedCache.current.has(movie.imdbID)) {
-          enriched[i] = enrichedCache.current.get(movie.imdbID);
+          enriched.push(enrichedCache.current.get(movie.imdbID));
           continue;
         }
 
-        const enrichedMovie = await fetchWithRetry(movie);
-        enrichedCache.current.set(movie.imdbID, enrichedMovie);
-        enriched[i] = enrichedMovie;
+        try {
+          await delay(200); // Delay to reduce 429 risk
+          const details = await getMovieDetails(movie.imdbID);
+          const full = { ...movie, ...details };
+          enrichedCache.current.set(movie.imdbID, full);
+          enriched.push(full);
+        } catch {
+          enriched.push(movie);
+        }
       }
-    };
+    });
 
-    const workers = Array.from({ length: MAX_CONCURRENT }, () => worker());
     await Promise.all(workers);
-
     return enriched;
   };
 
@@ -103,7 +90,6 @@ export default function Movies() {
           if (!shouldAbort() && currentRequestId === requestIdRef.current) {
             setSearchResults(enriched);
             setCuratedMovies([]);
-            setAllMovies([]);
             setHasMore(enriched.length >= MAX_SEARCH_RESULTS);
           }
         } else {
@@ -111,8 +97,6 @@ export default function Movies() {
           if (!shouldAbort() && currentRequestId === requestIdRef.current) {
             setCuratedMovies(enriched);
             setSearchResults([]);
-            setAllMovies([]);
-            setPage(2);
             setHasMore(true);
           }
         }
@@ -131,29 +115,6 @@ export default function Movies() {
     loadInitial(searchTitle);
     return () => abortRef.current?.abort();
   }, [searchTitle, loadInitial]);
-
-  const fetchNextPage = useCallback(async () => {
-    if (loading || !hasMore || searchTitle.trim()) return;
-    const currentRequestId = ++requestIdRef.current;
-    setLoading(true);
-    NProgress.start();
-
-    try {
-      const enriched = await fetchMoviesWithEnrichment('', page);
-      if (requestIdRef.current === currentRequestId) {
-        setAllMovies(prev => [...prev, ...enriched]);
-        setPage(prev => prev + 1);
-        if (enriched.length < 100) setHasMore(false);
-      }
-    } catch (err) {
-      console.error('❌ Pagination load failed', err);
-    } finally {
-      if (requestIdRef.current === currentRequestId) {
-        setLoading(false);
-        NProgress.done();
-      }
-    }
-  }, [page, loading, hasMore, searchTitle]);
 
   const fetchNextSearchPage = useCallback(async () => {
     if (!searchTitle.trim() || loading || !hasMore) return;
@@ -185,14 +146,12 @@ export default function Movies() {
 
       if (searchTitle.trim()) {
         fetchNextSearchPage();
-      } else {
-        fetchNextPage();
       }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [fetchNextPage, fetchNextSearchPage, loading, searchTitle]);
+  }, [fetchNextSearchPage, loading, searchTitle]);
 
   const normalizeGenres = (genres) => {
     if (Array.isArray(genres)) return genres.map(g => g.trim());
@@ -236,7 +195,6 @@ export default function Movies() {
   };
 
   const displayedSearchResults = applySortAndFilter(searchResults);
-  const displayedAllMovies = applySortAndFilter(allMovies);
 
   return (
     <div className="movies-page">
@@ -295,7 +253,7 @@ export default function Movies() {
           {loading && <Loader />}
         </>
       ) : (
-        <>
+        <div className="movies-content">
           {loading && curatedMovies.length === 0 ? (
             <Loader />
           ) : (
@@ -309,21 +267,9 @@ export default function Movies() {
               {kids.length > 0 && (
                 <MovieRow title="👶 Children’s Picks" rowId="kids" movies={kids} scrollRow={scrollRow} />
               )}
-
-              <h2 style={{ marginTop: '3rem' }}>All Movies (Scroll to Load More)</h2>
-              <div className="movie-grid">
-                {displayedAllMovies.map((movie) => (
-                  <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} />
-                ))}
-              </div>
-
-              {loading && <Loader />}
-              {!hasMore && allMovies.length > 0 && (
-                <p style={{ textAlign: 'center' }}>🎉 You’ve reached the end.</p>
-              )}
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );
