@@ -155,7 +155,11 @@ export default function MovieDetails() {
           {principals.map((p, idx) => (
             <tr key={idx}>
               <td>{p.category}</td>
-              <td>{p.name}</td>
+              <td>
+                <a href={`/people/${p.id}`} className="person-link">
+                  {p.name}
+                </a>
+              </td>
               <td>{p.characters?.join(', ') || '—'}</td>
             </tr>
           ))}

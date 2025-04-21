@@ -178,3 +178,12 @@
   background: #444;
   border-color: #ccc;
 }
+
+.person-link {
+  color: #007aff;
+  text-decoration: none;
+}
+
+.person-link:hover {
+  text-decoration: underline;
+}
