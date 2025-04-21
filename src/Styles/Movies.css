@@ -146,3 +146,60 @@
   align-items: center;
   padding: 4rem 0;
 }
+
+.update-section {
+  text-align: center;
+  padding: 4rem 1rem 6rem;
+  background: linear-gradient(to top, #0d0d0d 0%, transparent 100%);
+  color: white;
+}
+
+.update-section .emoji {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: wave 1.6s infinite;
+}
+
+@keyframes wave {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.update-section h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.update-section p {
+  font-size: 1rem;
+  color: #ccc;
+  margin-bottom: 1.5rem;
+}
+
+.update-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.update-buttons button {
+  background: #2c2c2c;
+  border: none;
+  color: white;
+  padding: 0.7rem 1.2rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.update-buttons button:hover {
+  background: #444;
+}

@@ -53,7 +53,7 @@ export default function Movies() {
         }
 
         try {
-          await delay(200); // Delay to reduce 429 risk
+          await delay(200);
           const details = await getMovieDetails(movie.imdbID);
           const full = { ...movie, ...details };
           enrichedCache.current.set(movie.imdbID, full);
@@ -143,7 +143,6 @@ export default function Movies() {
     const handleScroll = () => {
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
       if (!nearBottom || loading) return;
-
       if (searchTitle.trim()) {
         fetchNextSearchPage();
       }
@@ -188,13 +187,12 @@ export default function Movies() {
   const topRated = curatedMovies.filter(m => parseFloat(m.imdbRating) >= 7.6).slice(0, 10);
   const horror = curatedMovies.filter(m => normalizeGenres(m.genres).includes('Horror')).slice(0, 10);
   const kids = curatedMovies.filter(m => ['G', 'PG'].includes(m.classification)).slice(0, 10);
+  const displayedSearchResults = applySortAndFilter(searchResults);
 
   const scrollRow = (id, dir) => {
     const container = document.getElementById(id);
     if (container) container.scrollBy({ left: dir === 'left' ? -400 : 400, behavior: 'smooth' });
   };
-
-  const displayedSearchResults = applySortAndFilter(searchResults);
 
   return (
     <div className="movies-page">
@@ -267,6 +265,22 @@ export default function Movies() {
               {kids.length > 0 && (
                 <MovieRow title="👶 Children’s Picks" rowId="kids" movies={kids} scrollRow={scrollRow} />
               )}
+
+              {/* NEW: Update Section */}
+              <div className="update-section">
+                <div className="emoji">👋</div>
+                <p>Didn't find something to watch yet? We got you. Try one of these options instead:</p>
+                <div className="update-buttons">
+
+                  <button onClick={() => {
+                    window.location.href = '/movies-all';
+                    setSearchTitle('');
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                  }}>
+                    Browse and filter
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
