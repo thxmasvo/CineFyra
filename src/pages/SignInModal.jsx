@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import '../Styles/Modal.css'; // 🔥 New CSS for modal visuals
+import '../Styles/Modal.css';
 
 export default function SignInModal({ onClose }) {
   const [email, setEmail] = useState('');
@@ -22,11 +22,12 @@ export default function SignInModal({ onClose }) {
       if (!res.ok) throw new Error(data.message || 'Login failed');
 
       localStorage.setItem('cinefyra-token', data.bearerToken.token);
+      localStorage.setItem('cinefyra-refresh', data.refreshToken.token);
       localStorage.setItem('cinefyra-user', email);
 
       alert('✅ Login successful!');
-      onClose(); // Close modal
-      window.location.reload(); // Optional: refresh to reflect logged-in state
+      onClose();
+      window.location.reload();
     } catch (err) {
       setError(err.message);
     }

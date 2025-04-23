@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../Styles/Navbar.css';
-import { Link } from 'react-router-dom';
-// ✅ Correct: because SignInModal.jsx is inside /pages folder
 import SignInModal from '../pages/SignInModal';
 import SignUpModal from '../pages/SignUpModal';
+import { isLoggedIn, getUserEmail, logoutUser } from '../utils/auth';
 
 function Navbar() {
-  const [showModal, setShowModal] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setLoggedIn(isLoggedIn());
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutUser(); // ✅ Log out using refresh token and clear all
+    setLoggedIn(false);
+    navigate('/');
+  };
 
   return (
     <>
@@ -18,23 +30,46 @@ function Navbar() {
         </div>
 
         <div className="nav-center">
-          <a href="/">Home</a>
-          <a href="/movies">Movies</a>
-          <a href="/progress">Progress</a>
-          <a href="/profile">Profile</a>
+          <Link to="/">Home</Link>
+          <Link to="/movies">Movies</Link>
+          <Link to="/progress">Progress</Link>
+          <Link to="/profile">Profile</Link>
         </div>
 
         <div className="nav-right">
-          <button className="btn-signin" onClick={() => setShowModal(true)}>Sign In</button>
-          <button className="btn-outline-gradient" onClick={() => setShowSignUp(true)}>
-            Sign Up for Free
-          </button>
-
+          {loggedIn ? (
+            <div className="nav-user">
+              <span className="user-email">{getUserEmail()}</span>
+              <button onClick={handleLogout} className="btn-logout">Logout</button>
+            </div>
+          ) : (
+            <>
+              <button className="btn-signin" onClick={() => setShowSignIn(true)}>Sign In</button>
+              <button className="btn-outline-gradient" onClick={() => setShowSignUp(true)}>
+                Sign Up for Free
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
-      {showModal && <SignInModal onClose={() => setShowModal(false)} />}
-          {showSignUp && <SignUpModal onClose={() => setShowSignUp(false)} />}
+      {showSignIn && (
+        <SignInModal
+          onClose={() => {
+            setShowSignIn(false);
+            setLoggedIn(isLoggedIn());
+          }}
+        />
+      )}
+
+      {showSignUp && (
+        <SignUpModal
+          onClose={() => {
+            setShowSignUp(false);
+            setLoggedIn(isLoggedIn());
+          }}
+        />
+      )}
     </>
   );
 }
