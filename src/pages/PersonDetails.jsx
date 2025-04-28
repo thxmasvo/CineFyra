@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPersonDetails, getMovieDetails, getMovies } from '../api';
+import { getPersonDetails, getMovieDetails } from '../api';
 import { isLoggedIn } from '../utils/auth';
 import Loader from '../components/Loader';
 import '../Styles/PersonDetails.css';
@@ -23,25 +23,21 @@ export default function PersonDetails() {
     const fetchPerson = async () => {
       try {
         const data = await getPersonDetails(id);
+
         const enrichedRoles = await Promise.all(
           data.roles.map(async (r) => {
+            let poster = '';
             try {
-              const results = await getMovies(r.movieName);
-              const match = results.find(
-                (m) => m.title.toLowerCase() === r.movieName.toLowerCase()
-              );
-              if (!match || !match.imdbID) throw new Error('No IMDb match found');
-              const movieData = await getMovieDetails(match.imdbID);
-
-              return {
-                ...r,
-                imdbID: match.imdbID,
-                poster: movieData.poster || '',
-                imdbRating: movieData.imdbRating || 'N/A',
-              };
-            } catch (err) {
-              return { ...r, poster: '', imdbRating: 'N/A' };
+              const movieData = await getMovieDetails(r.movieId);
+              poster = movieData.poster || '';
+            } catch {
+              poster = '';
             }
+            return {
+              ...r,
+              imdbID: r.movieId,
+              poster,
+            };
           })
         );
 
@@ -58,23 +54,27 @@ export default function PersonDetails() {
 
   const scroll = (dir) => {
     if (!scrollRef.current) return;
-    const amount = 700; // snap to next column of 4 cards
+    const amount = 800; // Adjust scroll amount if needed
     scrollRef.current.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
   };
 
-  if (!isLoggedIn()) return <div className="person-container"><h2>Please log in to view person details.</h2></div>;
+  if (!isLoggedIn()) {
+    return <div className="person-container"><h2>Please log in to view person details.</h2></div>;
+  }
   if (loading) return <Loader />;
-  if (error || !person) return <p className="error-message">❌ {error || 'Person not found'}</p>;
+  if (error || !person) {
+    return <p className="error-message">❌ {error || 'Person not found'}</p>;
+  }
 
   const { name, birthYear, deathYear, roles } = person;
 
-  // Format roles into columns of 2 cards each, then chunk columns into groups of 4
-  const columns = [];
-  for (let i = 0; i < roles.length; i += 2) {
-    columns.push(roles.slice(i, i + 2));
-  }
+  const ratingBuckets = {
+    '0–4': 0,
+    '4–6': 0,
+    '6–8': 0,
+    '8–10': 0,
+  };
 
-  const ratingBuckets = { '0–4': 0, '4–6': 0, '6–8': 0, '8–10': 0 };
   roles.forEach(role => {
     const rating = parseFloat(role.imdbRating);
     if (!isNaN(rating)) {
@@ -103,12 +103,12 @@ export default function PersonDetails() {
 
       <div className="role-section">
         <h2>Movie Roles</h2>
-        <div className="scroll-wrapper">
-          <button className="scroll-btn left" onClick={() => scroll('left')}>&lt;</button>
-          <div className="role-scroll-row" ref={scrollRef}>
-            {columns.map((pair, index) => (
-              <div className="role-column" key={index}>
-                {pair.map((r, i) => (
+         <p className="roles-count">Played in {roles.length} roles</p>
+          <div className="scroll-wrapper">
+            <button className="scroll-btn left" onClick={() => scroll('left')}>&lt;</button>
+            <div className="outer-scroll" ref={scrollRef}>
+              <div className="inner-flex">
+                {roles.map((r, i) => (
                   <div key={i} className="role-card">
                     <img
                       src={r.poster?.startsWith('http') ? r.poster : 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png'}
@@ -125,10 +125,9 @@ export default function PersonDetails() {
                   </div>
                 ))}
               </div>
-            ))}
+            </div>
+            <button className="scroll-btn right" onClick={() => scroll('right')}>&gt;</button>
           </div>
-          <button className="scroll-btn right" onClick={() => scroll('right')}>&gt;</button>
-        </div>
       </div>
 
       <h3 className="chart-heading">IMDb Ratings at a Glance</h3>

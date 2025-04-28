@@ -5,6 +5,8 @@ import SignInModal from '../pages/SignInModal';
 import SignUpModal from '../pages/SignUpModal';
 import { isLoggedIn, getUserEmail, logoutUser } from '../utils/auth';
 
+
+
 function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -32,7 +34,6 @@ function Navbar() {
         <div className="nav-center">
           <Link to="/">Home</Link>
           <Link to="/movies">Movies</Link>
-          <Link to="/progress">Progress</Link>
           <Link to="/profile">Profile</Link>
         </div>
 

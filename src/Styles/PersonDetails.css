@@ -1,12 +1,11 @@
 .person-container {
   padding: 2rem;
-  background-color: #111;
+  background-color: var(--bg-dark); /* 👈 use your site root color */
   color: #eee;
   max-width: 1300px;
   margin: auto;
   text-align: center;
 }
-
 .back-button {
   position: absolute;
   top: 5.5rem;
@@ -20,6 +19,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
   z-index: 999;
+}
+.roles-count {
+  font-size: 1rem;
+  color: #cccccc;
+  margin-left: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 .back-button:hover {
@@ -53,40 +58,38 @@ h1 {
   padding: 1rem 0;
 }
 
-.role-scroll-row {
-  display: flex;
-  gap: 2rem;
+.outer-scroll {
   overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1rem 3rem;
   scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  padding: 0 3rem;
-}
-.role-scroll-row::-webkit-scrollbar {
-  display: none;
+  max-width: 1200px;
+  max-height: 550px; /* ⬅️ limit height for 2 rows */
 }
 
-.role-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  scroll-snap-align: start;
+.outer-scroll::-webkit-scrollbar {
+  display: none; /* Hide scrollbar */
 }
-.role-card {
-  width: 160px;
-  height: 370px; /* 👈 Fixed height for all cards */
+
+.inner-flex {
   display: flex;
-  flex-direction: column;
-  background-color: #1e1e1e;
+  flex-wrap: wrap; /* ⬅️ allow wrapping into second row */
+  gap: 2rem;
+  width: max-content; /* ⬅️ content defines width, not container */
+}
+
+.role-card {
+  width: 180px;
+  background: #1e1e1e;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease;
-  flex-shrink: 0;
+  flex: 0 0 auto; /* ⬅️ prevent shrinking */
 }
 
 .role-card:hover {
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 .role-poster {
