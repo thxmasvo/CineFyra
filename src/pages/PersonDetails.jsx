@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getPersonDetails, getMovieDetails } from '../api';
 import { isLoggedIn } from '../utils/auth';
 import Loader from '../components/Loader';
 import '../Styles/PersonDetails.css';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale } from 'chart.js';
-import { Link } from 'react-router-dom';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale);
 
@@ -18,13 +17,13 @@ export default function PersonDetails() {
   const [error, setError] = useState('');
   const scrollRef = useRef();
 
+  // Fetch person + enrich each role with poster data
   useEffect(() => {
     if (!isLoggedIn()) return;
 
     const fetchPerson = async () => {
       try {
         const data = await getPersonDetails(id);
-
         const enrichedRoles = await Promise.all(
           data.roles.map(async (r) => {
             let poster = '';
@@ -34,14 +33,9 @@ export default function PersonDetails() {
             } catch {
               poster = '';
             }
-            return {
-              ...r,
-              imdbID: r.movieId,
-              poster,
-            };
+            return { ...r, imdbID: r.movieId, poster };
           })
         );
-
         setPerson({ ...data, roles: enrichedRoles });
       } catch (err) {
         setError(err.message || 'Failed to load person.');
@@ -53,29 +47,21 @@ export default function PersonDetails() {
     fetchPerson();
   }, [id]);
 
+  // Scroll left/right horizontally
   const scroll = (dir) => {
     if (!scrollRef.current) return;
-    const amount = 800;
-    scrollRef.current.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+    scrollRef.current.scrollBy({ left: dir === 'left' ? -800 : 800, behavior: 'smooth' });
   };
 
-  if (!isLoggedIn()) {
-    return <div className="person-container"><h2>Please log in to view person details.</h2></div>;
-  }
+  // Edge cases
+  if (!isLoggedIn()) return <div className="person-container"><h2>Please log in to view person details.</h2></div>;
   if (loading) return <Loader />;
-  if (error || !person) {
-    return <p className="error-message">❌ {error || 'Person not found'}</p>;
-  }
+  if (error || !person) return <p className="error-message">❌ {error || 'Person not found'}</p>;
 
   const { name, birthYear, deathYear, roles } = person;
 
-  const ratingBuckets = {
-    '0–4': 0,
-    '4–6': 0,
-    '6–8': 0,
-    '8–10': 0,
-  };
-
+  // Build rating histogram data
+  const ratingBuckets = { '0–4': 0, '4–6': 0, '6–8': 0, '8–10': 0 };
   roles.forEach(role => {
     const rating = parseFloat(role.imdbRating);
     if (!isNaN(rating)) {
@@ -97,18 +83,22 @@ export default function PersonDetails() {
 
   return (
     <div className="person-container">
+      {/* Back nav */}
       <button onClick={() => navigate(-1)} className="back-button">← Back</button>
+
+      {/* Basic info */}
       <h1>{name}</h1>
       <p style={{ color: '#ccc' }}>Born in {birthYear || 'Unknown'}</p>
       {deathYear && <p style={{ color: '#ccc' }}>Died in {deathYear}</p>}
 
+      {/* Scrollable role section */}
       <div className="role-section">
         <h2>Movie Roles</h2>
-         <p className="roles-count">Played in {roles.length} roles</p>
-          <div className="scroll-wrapper">
-            <button className="scroll-btn left" onClick={() => scroll('left')}>&lt;</button>
-            <div className="outer-scroll" ref={scrollRef}>
-              <div className="inner-flex">
+        <p className="roles-count">Played in {roles.length} roles</p>
+        <div className="scroll-wrapper">
+          <button className="scroll-btn left" onClick={() => scroll('left')}>&lt;</button>
+          <div className="outer-scroll" ref={scrollRef}>
+            <div className="inner-flex">
               {roles.map((r, i) => (
                 <Link to={`/movies/${r.imdbID}`} key={i} className="role-card" style={{ textDecoration: 'none', color: 'inherit' }}>
                   <img
@@ -125,12 +115,13 @@ export default function PersonDetails() {
                   </div>
                 </Link>
               ))}
-              </div>
             </div>
-            <button className="scroll-btn right" onClick={() => scroll('right')}>&gt;</button>
           </div>
+          <button className="scroll-btn right" onClick={() => scroll('right')}>&gt;</button>
+        </div>
       </div>
 
+      {/* Ratings chart */}
       <h3 className="chart-heading">IMDb Ratings at a Glance</h3>
       <div className="chart-wrapper">
         <Bar data={chartData} />

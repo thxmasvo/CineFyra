@@ -5,8 +5,6 @@ import SignInModal from '../pages/SignInModal';
 import SignUpModal from '../pages/SignUpModal';
 import { isLoggedIn, getUserEmail, logoutUser } from '../utils/auth';
 
-
-
 function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -14,11 +12,11 @@ function Navbar() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoggedIn(isLoggedIn());
+    setLoggedIn(isLoggedIn()); // Sync state on mount
   }, []);
 
   const handleLogout = async () => {
-    await logoutUser(); //
+    await logoutUser(); // Clears tokens and session
     setLoggedIn(false);
     navigate('/');
   };
@@ -27,8 +25,7 @@ function Navbar() {
     <>
       <nav className="navbar">
         <div className="nav-left">
-
-          <span className="logo-text">   CineFyra</span>
+          <span className="logo-text">CineFyra</span>
         </div>
 
         <div className="nav-center">
@@ -58,7 +55,7 @@ function Navbar() {
         <SignInModal
           onClose={() => {
             setShowSignIn(false);
-            setLoggedIn(isLoggedIn());
+            setLoggedIn(isLoggedIn()); // Recheck after modal closes
           }}
         />
       )}
@@ -67,7 +64,7 @@ function Navbar() {
         <SignUpModal
           onClose={() => {
             setShowSignUp(false);
-            setLoggedIn(isLoggedIn());
+            setLoggedIn(isLoggedIn()); // Recheck after modal closes
           }}
         />
       )}

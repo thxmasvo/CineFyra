@@ -6,21 +6,28 @@ import '../Styles/Movies.css';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
+// Throttle, concurrency, and UX delay config
 const DEBOUNCE_DELAY = 500;
 const MAX_CONCURRENT = 4;
 const MAX_SEARCH_RESULTS = 10;
 const MIN_FETCH_DURATION = 1000;
 
 export default function Movies() {
+  // User input & sorting state
   const [searchTitle, setSearchTitle] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [sortOption, setSortOption] = useState('');
+
+  // Fetched movies
   const [searchResults, setSearchResults] = useState([]);
   const [curatedMovies, setCuratedMovies] = useState([]);
+
+  // Pagination + loading flags
   const [searchPage, setSearchPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // Refs for deduping and cancelling
   const enrichedCache = useRef(new Map());
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
@@ -28,20 +35,18 @@ export default function Movies() {
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
+  // Fetch + enrich movies with full details (rate limited + cached)
   const fetchMoviesWithEnrichment = async (title = '', pageNum = 1, shouldAbort = () => false, limit = null) => {
     const baseMovies = await getMovies(title, '', pageNum);
-    let filtered = baseMovies;
-
-    if (title) {
-      filtered = baseMovies.filter(m =>
-        m.title?.toLowerCase().includes(title.toLowerCase())
-      );
-      if (limit) filtered = filtered.slice(0, limit);
-    }
+    let filtered = title
+      ? baseMovies.filter(m => m.title?.toLowerCase().includes(title.toLowerCase()))
+      : baseMovies;
+    if (limit) filtered = filtered.slice(0, limit);
 
     let i = 0;
     const enriched = [];
 
+    // Concurrent enrichment
     const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
       while (i < filtered.length && !shouldAbort()) {
         const idx = i++;
@@ -53,13 +58,13 @@ export default function Movies() {
         }
 
         try {
-          await delay(200);
+          await delay(200); // avoid API 429
           const details = await getMovieDetails(movie.imdbID);
           const full = { ...movie, ...details };
           enrichedCache.current.set(movie.imdbID, full);
           enriched.push(full);
         } catch {
-          enriched.push(movie);
+          enriched.push(movie); // fallback if enrich fails
         }
       }
     });
@@ -68,14 +73,14 @@ export default function Movies() {
     return enriched;
   };
 
+  // Initial load and debounce logic
   const loadInitial = useCallback((title) => {
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
     const shouldAbort = () => abortRef.current.signal.aborted;
     const currentRequestId = ++requestIdRef.current;
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
+    clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       const startTime = Date.now();
       NProgress.start();
@@ -116,6 +121,7 @@ export default function Movies() {
     return () => abortRef.current?.abort();
   }, [searchTitle, loadInitial]);
 
+  // Infinite scroll pagination
   const fetchNextSearchPage = useCallback(async () => {
     if (!searchTitle.trim() || loading || !hasMore) return;
     const currentRequestId = ++requestIdRef.current;
@@ -139,25 +145,23 @@ export default function Movies() {
     }
   }, [searchTitle, searchPage, loading, hasMore]);
 
+  // Hook: Watch scroll to trigger infinite scroll
   useEffect(() => {
     const handleScroll = () => {
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
       if (!nearBottom || loading) return;
-      if (searchTitle.trim()) {
-        fetchNextSearchPage();
-      }
+      if (searchTitle.trim()) fetchNextSearchPage();
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [fetchNextSearchPage, loading, searchTitle]);
 
-  const normalizeGenres = (genres) => {
-    if (Array.isArray(genres)) return genres.map(g => g.trim());
-    if (typeof genres === 'string') return genres.split(',').map(g => g.trim());
-    return [];
-  };
+  const normalizeGenres = (genres) =>
+    Array.isArray(genres) ? genres.map(g => g.trim()) :
+    typeof genres === 'string' ? genres.split(',').map(g => g.trim()) : [];
 
+  // Local filtering/sorting (client-side only)
   const applySortAndFilter = useCallback((movies) => {
     let filtered = [...movies];
     if (selectedYear) {
@@ -165,25 +169,17 @@ export default function Movies() {
     }
 
     switch (sortOption) {
-      case 'az':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'za':
-        filtered.sort((a, b) => b.title.localeCompare(a.title));
-        break;
-      case 'rating':
-        filtered.sort((a, b) => parseFloat(b.imdbRating || 0) - parseFloat(a.imdbRating || 0));
-        break;
-      case 'year':
-        filtered.sort((a, b) => b.year - a.year);
-        break;
-      default:
-        break;
+      case 'az': filtered.sort((a, b) => a.title.localeCompare(b.title)); break;
+      case 'za': filtered.sort((a, b) => b.title.localeCompare(a.title)); break;
+      case 'rating': filtered.sort((a, b) => parseFloat(b.imdbRating || 0) - parseFloat(a.imdbRating || 0)); break;
+      case 'year': filtered.sort((a, b) => b.year - a.year); break;
+      default: break;
     }
 
     return filtered;
   }, [sortOption, selectedYear]);
 
+  // Curated sections
   const topRated = curatedMovies.filter(m => parseFloat(m.imdbRating) >= 7.6).slice(0, 10);
   const horror = curatedMovies.filter(m => normalizeGenres(m.genres).includes('Horror')).slice(0, 10);
   const kids = curatedMovies.filter(m => ['G', 'PG'].includes(m.classification)).slice(0, 10);
@@ -196,6 +192,7 @@ export default function Movies() {
 
   return (
     <div className="movies-page">
+      {/* Search input + optional filters */}
       <div className="search-container">
         <input
           type="text"
@@ -207,22 +204,14 @@ export default function Movies() {
 
         {searchTitle.trim() !== '' && (
           <div className="filters-row">
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="filter-select"
-            >
+            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
               <option value="">Any Year</option>
               {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i).reverse().map((year) => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
 
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="filter-select"
-            >
+            <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="filter-select">
               <option value="">Sort</option>
               <option value="az">A–Z</option>
               <option value="za">Z–A</option>
@@ -237,6 +226,7 @@ export default function Movies() {
 
       {searchTitle.trim() !== '' ? (
         <>
+          {/* Search Results */}
           {displayedSearchResults.length === 0 && !loading ? (
             <p style={{ textAlign: 'center', marginTop: '2rem' }}>
               🔍 No results found for "{searchTitle}"
@@ -266,12 +256,10 @@ export default function Movies() {
                 <MovieRow title="👶 Children’s Picks" rowId="kids" movies={kids} scrollRow={scrollRow} />
               )}
 
-              {/* NEW: Update Section */}
               <div className="update-section">
                 <div className="emoji">👋</div>
                 <p>Didn't find something to watch yet? We got you. Try one of these options instead:</p>
                 <div className="update-buttons">
-
                   <button onClick={() => {
                     window.location.href = '/movies-all';
                     setSearchTitle('');
@@ -289,12 +277,11 @@ export default function Movies() {
   );
 }
 
+// MovieRow component: horizontal scroll row of movie cards
 function MovieRow({ title, rowId, movies, scrollRow }) {
   return (
     <div className="section">
-      <div className="row-header">
-        <h2>{title}</h2>
-      </div>
+      <div className="row-header"><h2>{title}</h2></div>
       <div className="movie-scroll-wrapper">
         <div className="movie-scroll-row" id={rowId}>
           {movies.map((movie) => (

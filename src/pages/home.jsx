@@ -2,6 +2,8 @@ import React from 'react';
 import '../Styles/Home.css';
 import logo from '../assets/CineFyraLogo.jpg';
 
+
+//Home Page (Landing Page) of client side application
 function Home() {
   return (
     <div className="home-wrapper">

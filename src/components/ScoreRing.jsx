@@ -1,18 +1,18 @@
 import React from 'react';
 import '../Styles/ScoreRing.css';
 
-
 export default function ScoreRing({ value, label = 'Rotten' }) {
   const score = parseInt(value);
   const normalized = isNaN(score) ? 0 : Math.min(score, 100);
   const strokeDashoffset = 282 - (282 * normalized) / 100;
 
-let ringColorClass = 'ring-low';
-if (normalized >= 80) {
-  ringColorClass = 'ring-high';
-} else if (normalized >= 60) {
-  ringColorClass = 'ring-mid';
-}
+  // Set ring color based on score
+  let ringColorClass = 'ring-low';
+  if (normalized >= 80) {
+    ringColorClass = 'ring-high';
+  } else if (normalized >= 60) {
+    ringColorClass = 'ring-mid';
+  }
 
   return (
     <div className="score-ring-wrapper">
@@ -34,4 +34,3 @@ if (normalized >= 80) {
     </div>
   );
 }
-

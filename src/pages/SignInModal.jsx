@@ -6,6 +6,7 @@ export default function SignInModal({ onClose }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
+  // Handles login POST request to backend
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -18,16 +19,16 @@ export default function SignInModal({ onClose }) {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || 'Login failed');
 
+      // Persist session tokens + user identifier
       localStorage.setItem('cinefyra-token', data.bearerToken.token);
       localStorage.setItem('cinefyra-refresh', data.refreshToken.token);
       localStorage.setItem('cinefyra-user', email);
 
       alert('✅ Login successful!');
-      onClose();
-      window.location.reload();
+      onClose(); // Close modal
+      window.location.reload(); // Trigger state refresh (re-auth)
     } catch (err) {
       setError(err.message);
     }
@@ -39,8 +40,20 @@ export default function SignInModal({ onClose }) {
         <button className="modal-close" onClick={onClose}>×</button>
         <h2>Sign In to CineFyra</h2>
         <form onSubmit={handleSubmit}>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
           <button type="submit" className="modal-login-btn">Login</button>
         </form>
         {error && <p className="error">{error}</p>}

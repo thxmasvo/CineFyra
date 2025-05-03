@@ -1,3 +1,4 @@
+// Dependencies and components
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { getMovies, getMovieDetails } from '../api';
 import MovieCard from '../components/MovieCard';
@@ -6,11 +7,13 @@ import '../Styles/Movies.css';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
+// Config
 const MAX_CONCURRENT = 8;
 const MAX_RESULTS_PER_PAGE = 10;
 const DEBOUNCE_DELAY = 500;
 
 export default function MoviesAll() {
+  // State hooks for filters and results
   const [searchTitle, setSearchTitle] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [sortOption, setSortOption] = useState('');
@@ -20,19 +23,17 @@ export default function MoviesAll() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // Control refs
   const enrichedCache = useRef(new Map());
   const requestIdRef = useRef(0);
   const abortRef = useRef(null);
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
+  // Fetch movies + enrich with detailed data (multi-threaded)
   const fetchMoviesWithEnrichment = async (title = '', year = '', pageNum = 1, genre = '') => {
     const baseMovies = await getMovies(title, year, pageNum);
-    let filtered = baseMovies;
-
-    if (genre) {
-      filtered = filtered.filter(m => m.genres?.includes(genre));
-    }
+    let filtered = genre ? baseMovies.filter(m => m.genres?.includes(genre)) : baseMovies;
 
     let i = 0;
     const enriched = [];
@@ -48,13 +49,13 @@ export default function MoviesAll() {
         }
 
         try {
-          await delay(200);
+          await delay(200); // prevent API overload
           const details = await getMovieDetails(movie.imdbID);
           const full = { ...movie, ...details };
           enrichedCache.current.set(movie.imdbID, full);
           enriched.push(full);
         } catch {
-          enriched.push(movie);
+          enriched.push(movie); // fallback on failure
         }
       }
     });
@@ -63,6 +64,7 @@ export default function MoviesAll() {
     return enriched;
   };
 
+  // Load paginated movies
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
     const currentRequestId = ++requestIdRef.current;
@@ -86,6 +88,7 @@ export default function MoviesAll() {
     }
   }, [searchTitle, selectedYear, page, selectedGenre, loading, hasMore]);
 
+  // Infinite scroll
   useEffect(() => {
     const onScroll = () => {
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
@@ -95,6 +98,7 @@ export default function MoviesAll() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [loadMore, loading]);
 
+  // Reset on filter change
   useEffect(() => {
     setAllResults([]);
     setPage(1);
@@ -102,30 +106,23 @@ export default function MoviesAll() {
     loadMore();
   }, [searchTitle, selectedYear, sortOption, selectedGenre]);
 
+  // Parse comma-separated genres to array
   const normalizeGenres = (genres) => {
     if (Array.isArray(genres)) return genres.map(g => g.trim());
     if (typeof genres === 'string') return genres.split(',').map(g => g.trim());
     return [];
   };
 
+  // Sort after enrichment
   const applySortAndFilter = useCallback((movies) => {
     let filtered = [...movies];
 
     switch (sortOption) {
-      case 'az':
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'za':
-        filtered.sort((a, b) => b.title.localeCompare(a.title));
-        break;
-      case 'rating':
-        filtered.sort((a, b) => parseFloat(b.imdbRating || 0) - parseFloat(a.imdbRating || 0));
-        break;
-      case 'year':
-        filtered.sort((a, b) => b.year - a.year);
-        break;
-      default:
-        break;
+      case 'az': filtered.sort((a, b) => a.title.localeCompare(b.title)); break;
+      case 'za': filtered.sort((a, b) => b.title.localeCompare(a.title)); break;
+      case 'rating': filtered.sort((a, b) => parseFloat(b.imdbRating || 0) - parseFloat(a.imdbRating || 0)); break;
+      case 'year': filtered.sort((a, b) => b.year - a.year); break;
+      default: break;
     }
 
     return filtered;
@@ -135,6 +132,7 @@ export default function MoviesAll() {
 
   return (
     <div className="movies-page">
+      {/* Search and filter panel */}
       <div className="search-container">
         <input
           type="text"
@@ -175,12 +173,14 @@ export default function MoviesAll() {
 
       <h1>All Movies 🎞️</h1>
 
+      {/* Grid render */}
       <div className="movie-grid">
         {displayedResults.map((movie) => (
           <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} />
         ))}
       </div>
 
+      {/* Loading + end of scroll */}
       {loading && <Loader />}
       {!hasMore && !loading && displayedResults.length > 0 && (
         <p style={{ textAlign: 'center', marginTop: '2rem' }}>🎉 You've reached the end!</p>

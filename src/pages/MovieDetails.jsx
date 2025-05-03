@@ -19,16 +19,15 @@ export default function MovieDetails() {
     const signal = controller.signal;
     let isCancelled = false;
 
-    // Reset on mount
+    // Reset state before each fetch
     setMovie(null);
     setLoading(true);
     setError(false);
 
+    // Fetch movie details with cancellation
     const fetchDetails = async () => {
       try {
         const data = await getMovieDetails(imdbID, signal);
-        console.log('🧾 Raw movie data:', data);
-
         if (!isCancelled && data?.title) {
           setMovie(data);
         } else if (!isCancelled) {
@@ -36,7 +35,6 @@ export default function MovieDetails() {
         }
       } catch (err) {
         if (!isCancelled && err.name !== 'AbortError') {
-          console.error('❌ getMovieDetails failed:', err);
           setError(true);
         }
       } finally {
@@ -71,23 +69,23 @@ export default function MovieDetails() {
     principals = [],
   } = movie;
 
+  // Map rating source aliases to API label
   const getRating = (source) => {
-    const sourceMap = {
+    const map = {
       imdb: 'Internet Movie Database',
       rotten: 'Rotten Tomatoes',
       metacritic: 'Metacritic',
     };
-    const target = sourceMap[source.toLowerCase()];
-    const found = ratings?.find((r) => r.source === target);
-    return found ? found.value : 'N/A';
+    const label = map[source.toLowerCase()];
+    return ratings?.find((r) => r.source === label)?.value || 'N/A';
   };
 
+  // Convert Rotten score to numeric for progress ring
   const rottenRaw = getRating('rotten');
   const rottenClean = parseFloat(rottenRaw?.toString().replace('%', ''));
   const ringPercent = !isNaN(rottenClean) ? rottenClean : null;
 
-  const formatCurrency = (value) =>
-    typeof value === 'number' ? `$${value.toLocaleString()}` : 'N/A';
+  const formatCurrency = (v) => (typeof v === 'number' ? `$${v.toLocaleString()}` : 'N/A');
 
   return (
     <div className="details-container">
@@ -113,11 +111,10 @@ export default function MovieDetails() {
             ))}
           </div>
 
+          {/* Rotten Tomatoes rating ring */}
           <div className="ratings-ring">
             <div className="ring">
-              <div className="score-text">
-                {ringPercent !== null ? rottenClean : 'N/A'}
-              </div>
+              <div className="score-text">{ringPercent !== null ? rottenClean : 'N/A'}</div>
               <svg>
                 <circle cx="30" cy="30" r="28" />
                 <circle
@@ -134,6 +131,8 @@ export default function MovieDetails() {
               </svg>
               <span className="ring-label">Rotten</span>
             </div>
+
+            {/* Other ratings listed below ring */}
             <div className="other-ratings">
               <p><strong>IMDb:</strong> {getRating('imdb')}</p>
               <p><strong>Metacritic:</strong> {getRating('metacritic')}</p>
@@ -142,6 +141,7 @@ export default function MovieDetails() {
         </div>
       </div>
 
+      {/* Cast & Crew table */}
       <h2 className="cast-heading">🎬 Cast & Crew</h2>
       <table className="cast-table">
         <thead>

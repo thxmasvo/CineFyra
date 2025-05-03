@@ -7,6 +7,7 @@ export default function MovieCard({ movie, poster }) {
     <Link
       to={`/movies/${movie.imdbID}`}
       className="movie-card-link"
+      // Preload movie details on hover for smoother navigation
       onMouseEnter={() => {
         getMovieDetails(movie.imdbID).catch(() => {});
       }}
@@ -17,6 +18,7 @@ export default function MovieCard({ movie, poster }) {
             src={poster}
             alt={movie.title}
             className="movie-poster"
+            // Fallback image for broken poster URLs
             onError={(e) => {
               e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png';
             }}

@@ -1,6 +1,7 @@
 import React from 'react';
 import '../Styles/Footer.css';
 
+// Footer appears on all pages — attribution and copyright
 export default function Footer() {
   return (
     <footer className="footer">
