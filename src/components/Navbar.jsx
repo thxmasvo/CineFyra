@@ -27,8 +27,8 @@ function Navbar() {
     <>
       <nav className="navbar">
         <div className="nav-left">
-          <img src="/assets/react.svg" alt="Logo" className="logo-img" />
-          <span className="logo-text">CineFyra</span>
+
+          <span className="logo-text">   CineFyra</span>
         </div>
 
         <div className="nav-center">

@@ -1,78 +1,93 @@
 :root {
-    --bg-dark: #121212;
-    --text-light: #ffffff;
-    --accent: #999999; /* soft gray */
-    --accent-hover: #bfbfbf;
+  --bg-dark: #121212;
+  --text-light: #ffffff;
+  --accent: #999999;
+  --accent-hover: #bfbfbf;
+}
 
-  }
-  
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-  }
-  
-  .home-wrapper {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  
-  /* Hero Section */
-  .hero {
-    text-align: left;
-    padding: 5rem 3rem;
-    max-width: 700px;
-    margin: 0 auto;
-  }
-  
-  .hero h1 {
-    font-size: 2.8rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-  
-  .hero p {
-    font-size: 1.1rem;
-    color: #cccccc;
-    margin-bottom: 2rem;
-  }
-  
-  .hero-buttons {
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .btn {
-    padding: 0.7rem 1.5rem;
-    border-radius: 30px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-  }
-  
-  .btn-primary {
-    background-color: var(--accent);
-    color: white;
-  }
-  
-  .btn-primary:hover {
-    background-color: var(--accent-hover);
-  }
-  
-  .btn-outline {
-    border: 1px solid var(--accent);
-    color: var(--accent);
-  }
-  
-  .btn-outline:hover {
-    background-color: var(--accent);
-    color: white;
-  }
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+}
 
-  h1, h2, h3, h4, h5, h6 {
-    color: var(--text-light) !important;
-  }
+.home-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Hero Section */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6rem 1rem 3rem;
+  text-align: center;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 1000px;
+  height: auto;
+  margin-bottom: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(255, 255, 255, 0.05);
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-light);
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: var(--accent);
+  margin-bottom: 2rem;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 0.75rem 1.8rem;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-outline {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background-color: var(--accent);
+  color: white;
+}
+
+/* Ensure consistent heading color */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-light) !important;
+}
