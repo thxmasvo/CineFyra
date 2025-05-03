@@ -1,3 +1,5 @@
+import { refreshToken, logoutUser } from './utils/auth';
+
 export function getMovies(title = '', year = '', page = 1, signal) {
   const baseUrl = 'http://4.237.58.241:3000/movies/search';
   const params = new URLSearchParams();
@@ -16,8 +18,8 @@ export async function getMovieDetails(imdbID) {
     const res = await fetch(url);
     if (res.status === 429) {
       console.warn(`⏳ Rate limit hit for ${imdbID}. Retrying after delay...`);
-      await new Promise(res => setTimeout(res, 1000)); // wait 1s
-      return getMovieDetails(imdbID); // retry once
+      await new Promise(res => setTimeout(res, 1000));
+      return getMovieDetails(imdbID);
     }
     if (!res.ok) throw new Error(await res.text());
     return await res.json();
@@ -40,7 +42,7 @@ export async function getPersonDetails(id) {
   if (res.status === 401) {
     console.warn('🔄 Token expired, attempting refresh...');
     try {
-      token = await refreshToken(); // this also updates localStorage
+      token = await refreshToken(); // Correctly imported function
       const retry = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -50,7 +52,7 @@ export async function getPersonDetails(id) {
       return await retry.json();
     } catch (err) {
       console.error('❌ Token refresh failed:', err.message);
-      logoutUser(); // clear tokens
+      logoutUser(); // Correctly imported function
       throw new Error('Session expired. Please log in again.');
     }
   }
@@ -80,7 +82,9 @@ export async function loginUser(email, password) {
 
   const data = await res.json();
   if (!res.ok) throw new Error(data.message);
-  localStorage.setItem('cinefyra-token', data.token); // Save token
+  localStorage.setItem('cinefyra-token', data.token);
+  localStorage.setItem('cinefyra-refresh', data.refreshToken);  // Ensure refreshToken is stored
+  localStorage.setItem('cinefyra-user', email);
+
   return data;
 }
-

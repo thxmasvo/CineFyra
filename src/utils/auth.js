@@ -14,27 +14,23 @@ export async function refreshToken() {
 
   const res = await fetch('http://4.237.58.241:3000/user/refresh', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ refreshToken: refresh }), // Send refreshToken properly
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken: refresh }),
   });
 
-    if (res.status === 400 || res.status === 401) {
-      await logoutUser();
-      navigate('/login');  // 🔥 redirect to login page after session expires
-      throw new Error('Session expired. Please sign in again.');
-    }
+  if (res.status === 400 || res.status === 401) {
+    await logoutUser();
+    throw new Error('Session expired. Please sign in again.');
+  }
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message);
-
   localStorage.setItem('cinefyra-token', data.bearerToken.token);
   localStorage.setItem('cinefyra-refresh', data.refreshToken.token);
 
   scheduleTokenRefresh(data.bearerToken.expires_in);
   return data.bearerToken.token;
 }
+
 
 export async function logoutUser() {
   const refresh = localStorage.getItem('cinefyra-refresh');

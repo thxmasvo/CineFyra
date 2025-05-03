@@ -7,7 +7,7 @@ function Home() {
     <div className="home-container">
       <div className="hero-content">
         <h1>Start your AI Course Journey</h1>
-        <p>Create your own custom courses powered by movie data and smart learning paths.</p>
+        <p>Create your own custom courses powered by movie ndata and smart learning paths.</p>
         <div>
           <a href="/register" className="btn-primary">Get Started</a>
           <a href="/movies" className="btn-outline">Browse Movies →</a>
