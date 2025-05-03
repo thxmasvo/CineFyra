@@ -18,7 +18,7 @@ function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    await logoutUser(); // ✅ Log out using refresh token and clear all
+    await logoutUser(); //
     setLoggedIn(false);
     navigate('/');
   };

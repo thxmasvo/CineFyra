@@ -8,7 +8,6 @@ export default function MovieCard({ movie, poster }) {
       to={`/movies/${movie.imdbID}`}
       className="movie-card-link"
       onMouseEnter={() => {
-        // Prefetch to reduce cold loads
         getMovieDetails(movie.imdbID).catch(() => {});
       }}
     >

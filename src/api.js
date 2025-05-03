@@ -42,7 +42,7 @@ export async function getPersonDetails(id) {
   if (res.status === 401) {
     console.warn('🔄 Token expired, attempting refresh...');
     try {
-      token = await refreshToken(); // Correctly imported function
+      token = await refreshToken();
       const retry = await fetch(url, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -52,7 +52,7 @@ export async function getPersonDetails(id) {
       return await retry.json();
     } catch (err) {
       console.error('❌ Token refresh failed:', err.message);
-      logoutUser(); // Correctly imported function
+      logoutUser();
       throw new Error('Session expired. Please log in again.');
     }
   }
@@ -83,7 +83,7 @@ export async function loginUser(email, password) {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message);
   localStorage.setItem('cinefyra-token', data.token);
-  localStorage.setItem('cinefyra-refresh', data.refreshToken);  // Ensure refreshToken is stored
+  localStorage.setItem('cinefyra-refresh', data.refreshToken);
   localStorage.setItem('cinefyra-user', email);
 
   return data;

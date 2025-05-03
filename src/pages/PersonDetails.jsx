@@ -6,6 +6,7 @@ import Loader from '../components/Loader';
 import '../Styles/PersonDetails.css';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { Link } from 'react-router-dom';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale);
 
@@ -54,7 +55,7 @@ export default function PersonDetails() {
 
   const scroll = (dir) => {
     if (!scrollRef.current) return;
-    const amount = 800; // Adjust scroll amount if needed
+    const amount = 800;
     scrollRef.current.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
   };
 
@@ -108,22 +109,22 @@ export default function PersonDetails() {
             <button className="scroll-btn left" onClick={() => scroll('left')}>&lt;</button>
             <div className="outer-scroll" ref={scrollRef}>
               <div className="inner-flex">
-                {roles.map((r, i) => (
-                  <div key={i} className="role-card">
-                    <img
-                      src={r.poster?.startsWith('http') ? r.poster : 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png'}
-                      alt={`${r.movieName} poster`}
-                      className="role-poster"
-                      onError={(e) => e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png'}
-                    />
-                    <div className="role-info">
-                      <h3>{r.movieName}</h3>
-                      <p><strong>Role:</strong> {r.category}</p>
-                      <p><strong>Characters:</strong> {r.characters?.join(', ') || '—'}</p>
-                      <p><strong>IMDb:</strong> {r.imdbRating || 'N/A'}</p>
-                    </div>
+              {roles.map((r, i) => (
+                <Link to={`/movies/${r.imdbID}`} key={i} className="role-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <img
+                    src={r.poster?.startsWith('http') ? r.poster : 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png'}
+                    alt={`${r.movieName} poster`}
+                    className="role-poster"
+                    onError={(e) => e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png'}
+                  />
+                  <div className="role-info">
+                    <h3>{r.movieName}</h3>
+                    <p><strong>Role:</strong> {r.category}</p>
+                    <p><strong>Characters:</strong> {r.characters?.join(', ') || '—'}</p>
+                    <p><strong>IMDb:</strong> {r.imdbRating || 'N/A'}</p>
                   </div>
-                ))}
+                </Link>
+              ))}
               </div>
             </div>
             <button className="scroll-btn right" onClick={() => scroll('right')}>&gt;</button>
