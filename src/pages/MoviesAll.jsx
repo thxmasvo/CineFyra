@@ -10,7 +10,6 @@ import 'nprogress/nprogress.css';
 // Config
 const MAX_CONCURRENT = 8;
 const MAX_RESULTS_PER_PAGE = 10;
-const DEBOUNCE_DELAY = 500;
 
 export default function MoviesAll() {
   // State hooks for filters and results
@@ -26,11 +25,10 @@ export default function MoviesAll() {
   // Control refs
   const enrichedCache = useRef(new Map());
   const requestIdRef = useRef(0);
-  const abortRef = useRef(null);
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-  // Fetch movies + enrich with detailed data (multi-threaded)
+  // Fetch movies + enrich with detailed data
   const fetchMoviesWithEnrichment = async (title = '', year = '', pageNum = 1, genre = '') => {
     const baseMovies = await getMovies(title, year, pageNum);
     let filtered = genre ? baseMovies.filter(m => m.genres?.includes(genre)) : baseMovies;
@@ -106,13 +104,6 @@ export default function MoviesAll() {
     loadMore();
   }, [searchTitle, selectedYear, sortOption, selectedGenre]);
 
-  // Parse comma-separated genres to array
-  const normalizeGenres = (genres) => {
-    if (Array.isArray(genres)) return genres.map(g => g.trim());
-    if (typeof genres === 'string') return genres.split(',').map(g => g.trim());
-    return [];
-  };
-
   // Sort after enrichment
   const applySortAndFilter = useCallback((movies) => {
     let filtered = [...movies];
@@ -168,8 +159,14 @@ export default function MoviesAll() {
             <option value="Thriller">Thriller</option>
             <option value="Crime">Crime</option>
           </select>
+
+            <a href="/movies-grid" className="btn-outline" style={{ marginLeft: 'auto' }}>
+              Switch to Grid View
+            </a>
         </div>
       </div>
+
+
 
       <h1>All Movies 🎞️</h1>
 

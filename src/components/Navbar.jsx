@@ -31,7 +31,8 @@ function Navbar() {
         <div className="nav-center">
           <Link to="/">Home</Link>
           <Link to="/movies">Movies</Link>
-          <Link to="/profile">Profile</Link>
+           <Link to="/movies-grid">Browse</Link>
+
         </div>
 
         <div className="nav-right">

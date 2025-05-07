@@ -7,6 +7,7 @@ import MovieDetails from './pages/MovieDetails.jsx';
 import MoviesAll from './pages/MoviesAll';
 import PersonDetails from './pages/PersonDetails';
 import Footer from './components/Footer';
+import MoviesGrid from './pages/MoviesGrid';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/movies/:imdbID" element={<MovieDetails />} />
           <Route path="/movies-all" element={<MoviesAll />} />
           <Route path="/people/:id" element={<PersonDetails />} />
+          <Route path="/movies-grid" element={<MoviesGrid />} />
         </Routes>
       </main>
       <Footer />

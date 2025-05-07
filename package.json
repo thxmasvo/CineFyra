@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ag-grid-community/client-side-row-model": "^32.3.5",
+    "@ag-grid-community/core": "^32.3.5",
     "ag-grid-community": "^33.2.2",
-    "ag-grid-react": "^33.2.2",
+    "ag-grid-react": "^33.2.4",
     "bootstrap": "^5.3.5",
     "chart.js": "^4.4.9",
     "nprogress": "^0.2.0",

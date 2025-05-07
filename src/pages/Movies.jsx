@@ -261,7 +261,7 @@ export default function Movies() {
                 <p>Didn't find something to watch yet? We got you. Try one of these options instead:</p>
                 <div className="update-buttons">
                   <button onClick={() => {
-                    window.location.href = '/movies-all';
+                    window.location.href = '/movies-grid';
                     setSearchTitle('');
                     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                   }}>

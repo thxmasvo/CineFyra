@@ -203,3 +203,78 @@
 .update-buttons button:hover {
   background: #444;
 }
+
+/* === Dark Mode Quartz Customization === */
+
+:root .ag-theme-quartz {
+  --ag-background-color: #121212;
+  --ag-foreground-color: #f0f0f0;
+  --ag-header-background-color: #1e1e1e;
+  --ag-header-foreground-color: #f0f0f0;
+  --ag-borders: none;
+  --ag-row-hover-color: #1f1f1f;
+  --ag-odd-row-background-color: #181818;
+  --ag-even-row-background-color: #121212;
+  --ag-font-size: 14px;
+  --ag-row-border-color: #2a2a2a;
+  --ag-selected-row-background-color: #2d2d2d;
+  --ag-font-family: 'Inter', sans-serif;
+
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+/* Header row enhancements */
+.ag-header-cell-label {
+  font-weight: 600;
+}
+
+/* Center-align all columns */
+.ag-cell {
+  display: flex;
+  align-items: center;
+}
+/* === Make AG Grid Scrollbars Invisible === */
+
+.ag-theme-quartz ::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+.ag-theme-quartz ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ag-theme-quartz ::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border: none;
+}
+
+.ag-theme-quartz {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.btn-outline {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  border: 1px solid #333;
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+  box-shadow: 0 0 0 1px #444;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.btn-outline:hover {
+  border-color: #c99cff;
+  background-color: #272727;
+  color: #ffffff;
+  box-shadow: 0 0 6px #c99cff55;
+}
+
+
