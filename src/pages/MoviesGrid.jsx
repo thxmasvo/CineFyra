@@ -12,7 +12,7 @@ ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
 const MAX_CONCURRENT = 8;
 const MAX_RESULTS_PER_PAGE = 10;
-const MAX_PAGES_TO_FETCH = 10;
+const MAX_PAGES_TO_FETCH = 30; // increased to catch later-year movies
 
 export default function MoviesGrid() {
   const gridRef = useRef();
@@ -40,12 +40,16 @@ export default function MoviesGrid() {
         let allMovies = [];
         let currentPage = 1;
 
-        while (allMovies.length < MAX_RESULTS_PER_PAGE * 2 && currentPage <= MAX_PAGES_TO_FETCH) {
-          const raw = await getMovies(searchTitle, '', currentPage); // Removed selectedYear from query
+        console.log('🔎 Fetching movies...');
+        while (allMovies.length < MAX_RESULTS_PER_PAGE * 3 && currentPage <= MAX_PAGES_TO_FETCH) {
+          const raw = await getMovies(searchTitle, selectedYear || '', currentPage); // pass year if selected
           if (!raw || raw.length === 0) break;
+          console.log(`📦 Page ${currentPage} returned ${raw.length} results.`);
           allMovies.push(...raw);
           currentPage++;
         }
+
+        console.log(`📊 Total raw movies fetched: ${allMovies.length}`);
 
         const enriched = [];
         let i = 0;
@@ -66,18 +70,23 @@ export default function MoviesGrid() {
               const full = { ...movie, ...details };
               enrichedCache.current.set(movie.imdbID, full);
               enriched.push(full);
+              console.log(`✅ Enriched: ${full.title} (${full.year})`);
             } catch (err) {
               enriched.push(movie);
+              console.warn(`❌ Failed to enrich ${movie.imdbID}: ${err.message}`);
             }
           }
         });
 
         await Promise.all(workers);
+        console.log(`✅ Total enriched movies: ${enriched.length}`);
+        console.log(`🎯 Applying filters — Genre: '${selectedGenre}', Year: '${selectedYear}'`);
 
-        // Filter by genre and year AFTER enrichment
-        const genreYearFiltered = enriched.filter((movie) => {
-          // Genre filter
+        const filtered = enriched.filter((movie) => {
           let genreMatch = true;
+          let yearMatch = true;
+
+          // Genre match
           if (selectedGenre) {
             const genres = movie.genres;
             if (!genres) genreMatch = false;
@@ -88,19 +97,25 @@ export default function MoviesGrid() {
             }
           }
 
-          // Year filter
-          let yearMatch = true;
+          // Year match
           if (selectedYear) {
-            yearMatch = String(movie.year) === selectedYear;
+            const year = movie.year;
+            yearMatch = String(year) === selectedYear;
+            if (!yearMatch) {
+              console.log(`❌ Year mismatch: ${movie.title} has year ${year}, expected ${selectedYear}`);
+            }
           }
 
           return genreMatch && yearMatch;
         });
 
-        const slice = genreYearFiltered.slice(0, MAX_RESULTS_PER_PAGE);
+        console.log(`✅ Filtered results: ${filtered.length}`);
+
+        const slice = filtered.slice(0, MAX_RESULTS_PER_PAGE);
         const lastRow = slice.length < MAX_RESULTS_PER_PAGE ? startRow + slice.length : undefined;
         params.successCallback(slice, lastRow);
       } catch (err) {
+        console.error('❌ Grid load failed:', err);
         params.failCallback();
       } finally {
         NProgress.done();
@@ -110,6 +125,7 @@ export default function MoviesGrid() {
 
   useEffect(() => {
     if (gridRef.current?.api) {
+      console.log('🔁 Purging cache due to filter change');
       gridRef.current.api.purgeInfiniteCache();
     }
   }, [searchTitle, selectedYear, selectedGenre]);
