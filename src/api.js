@@ -1,17 +1,19 @@
 import { refreshToken, logoutUser } from './utils/auth';
 
 // Search for movies by title/year/page
-export function getMovies(title = '', year = '', page = 1, signal) {
+export function getMovies(title = '', year = '', page = 1, genre = '', signal) {
   const baseUrl = 'http://4.237.58.241:3000/movies/search';
   const params = new URLSearchParams();
   if (title) params.append('title', title);
   if (year) params.append('year', year);
+  if (genre) params.append('genre', genre);
   params.append('page', page);
 
-  return fetch(`${baseUrl}?${params.toString()}`, { signal })
+  return fetch(`${baseUrl}?${params.toString()}`, signal ? { signal } : {})
     .then(res => res.json())
     .then(res => res.data || []);
 }
+
 
 // Fetch detailed movie data by IMDb ID
 export async function getMovieDetails(imdbID) {

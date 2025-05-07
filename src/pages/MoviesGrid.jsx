@@ -12,6 +12,7 @@ ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
 const MAX_CONCURRENT = 8;
 const MAX_RESULTS_PER_PAGE = 10;
+const MAX_PAGES_TO_FETCH = 10;
 
 export default function MoviesGrid() {
   const gridRef = useRef();
@@ -33,23 +34,26 @@ export default function MoviesGrid() {
   const datasource = useMemo(() => ({
     async getRows(params) {
       const { startRow } = params;
-      const page = Math.floor(startRow / MAX_RESULTS_PER_PAGE) + 1;
       NProgress.start();
 
       try {
-        const baseMovies = await getMovies(searchTitle, selectedYear, page);
-        const filtered = selectedGenre
-          ? baseMovies.filter((m) => m.genres?.includes(selectedGenre))
-          : baseMovies;
-        const moviesSlice = filtered.slice(0, MAX_RESULTS_PER_PAGE);
+        let allMovies = [];
+        let currentPage = 1;
 
-        let i = 0;
+        while (allMovies.length < MAX_RESULTS_PER_PAGE * 2 && currentPage <= MAX_PAGES_TO_FETCH) {
+          const raw = await getMovies(searchTitle, '', currentPage); // Removed selectedYear from query
+          if (!raw || raw.length === 0) break;
+          allMovies.push(...raw);
+          currentPage++;
+        }
+
         const enriched = [];
+        let i = 0;
 
         const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
-          while (i < moviesSlice.length) {
+          while (i < allMovies.length) {
             const idx = i++;
-            const movie = moviesSlice[idx];
+            const movie = allMovies[idx];
 
             if (enrichedCache.current.has(movie.imdbID)) {
               enriched.push(enrichedCache.current.get(movie.imdbID));
@@ -62,7 +66,7 @@ export default function MoviesGrid() {
               const full = { ...movie, ...details };
               enrichedCache.current.set(movie.imdbID, full);
               enriched.push(full);
-            } catch {
+            } catch (err) {
               enriched.push(movie);
             }
           }
@@ -70,10 +74,33 @@ export default function MoviesGrid() {
 
         await Promise.all(workers);
 
-        const lastRow = enriched.length < MAX_RESULTS_PER_PAGE ? startRow + enriched.length : undefined;
-        params.successCallback(enriched, lastRow);
+        // Filter by genre and year AFTER enrichment
+        const genreYearFiltered = enriched.filter((movie) => {
+          // Genre filter
+          let genreMatch = true;
+          if (selectedGenre) {
+            const genres = movie.genres;
+            if (!genres) genreMatch = false;
+            else if (Array.isArray(genres)) {
+              genreMatch = genres.some(g => g.toLowerCase() === selectedGenre.toLowerCase());
+            } else if (typeof genres === 'string') {
+              genreMatch = genres.toLowerCase().split(',').map(g => g.trim()).includes(selectedGenre.toLowerCase());
+            }
+          }
+
+          // Year filter
+          let yearMatch = true;
+          if (selectedYear) {
+            yearMatch = String(movie.year) === selectedYear;
+          }
+
+          return genreMatch && yearMatch;
+        });
+
+        const slice = genreYearFiltered.slice(0, MAX_RESULTS_PER_PAGE);
+        const lastRow = slice.length < MAX_RESULTS_PER_PAGE ? startRow + slice.length : undefined;
+        params.successCallback(slice, lastRow);
       } catch (err) {
-        console.error('❌ AG Grid load failed', err);
         params.failCallback();
       } finally {
         NProgress.done();
@@ -89,7 +116,7 @@ export default function MoviesGrid() {
 
   return (
     <div style={{ backgroundColor: '#121212', minHeight: '100vh', color: '#f0f0f0' }}>
-      {/* Search + Filter Bar */}
+      {/* Search + Filters */}
       <div className="search-container">
         <input
           type="text"
@@ -102,7 +129,7 @@ export default function MoviesGrid() {
           <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
             <option value="">Any Year</option>
             {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i).reverse().map((year) => (
-              <option key={year} value={year}>{year}</option>
+              <option key={year} value={String(year)}>{year}</option>
             ))}
           </select>
           <select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} className="filter-select">
@@ -116,15 +143,12 @@ export default function MoviesGrid() {
             <option value="Thriller">Thriller</option>
             <option value="Crime">Crime</option>
           </select>
-
           <a href="/movies-all" className="btn-outline" style={{ marginLeft: 'auto' }}>
             Switch to Card View
           </a>
         </div>
       </div>
 
-      {/* AG Grid Table */}
-      <h1 style={{ padding: '1.5rem 2rem 0', fontSize: '1.8rem', fontWeight: 600 }}>🎞️ All Movies (AG Grid View)</h1>
       <div
         className="ag-theme-quartz"
         style={{

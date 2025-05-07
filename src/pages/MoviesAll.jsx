@@ -168,7 +168,7 @@ export default function MoviesAll() {
 
 
 
-      <h1>All Movies 🎞️</h1>
+
 
       {/* Grid render */}
       <div className="movie-grid">
