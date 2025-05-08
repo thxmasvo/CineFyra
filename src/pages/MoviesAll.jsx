@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { getEnrichedMovies } from '../api';
-import MovieCard from '../components/MovieCard';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { getBasicMovies } from '../api';
+import MovieCardText from '../components/MovieCardText';
 import Loader from '../components/Loader';
 import '../Styles/Movies.css';
 import NProgress from 'nprogress';
@@ -10,90 +10,70 @@ const MAX_RESULTS_PER_PAGE = 10;
 
 export default function MoviesAll() {
   const [searchTitle, setSearchTitle] = useState('');
+  const [debouncedTitle, setDebouncedTitle] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
-  const [sortOption, setSortOption] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('');
-  const [allResults, setAllResults] = useState([]);
+  const [selectedRating, setSelectedRating] = useState('');
+  const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const requestIdRef = useRef(0);
+  const [emptyResult, setEmptyResult] = useState(false);
 
-  const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
-    const currentRequestId = ++requestIdRef.current;
-    setLoading(true);
-    NProgress.start();
-
-    try {
-      const enriched = await getEnrichedMovies(searchTitle, page);
-      const filtered = enriched.filter(movie => {
-        let yearMatch = true;
-        let genreMatch = true;
-
-        if (selectedYear) {
-          yearMatch = String(movie.year) === selectedYear;
-        }
-
-        if (selectedGenre) {
-          const genres = Array.isArray(movie.genres)
-            ? movie.genres
-            : typeof movie.genres === 'string'
-            ? movie.genres.split(',').map(g => g.trim())
-            : [];
-          genreMatch = genres.includes(selectedGenre);
-        }
-
-        return yearMatch && genreMatch;
-      });
-
-      if (requestIdRef.current === currentRequestId) {
-        setAllResults(prev => [...prev, ...filtered]);
-        setPage(prev => prev + 1);
-        if (filtered.length < MAX_RESULTS_PER_PAGE) setHasMore(false);
-      }
-    } catch (err) {
-      console.error('❌ Load failed', err);
-    } finally {
-      if (requestIdRef.current === currentRequestId) {
-        setLoading(false);
-        NProgress.done();
-      }
-    }
-  }, [searchTitle, selectedYear, selectedGenre, page, loading, hasMore]);
+  const observer = useRef();
 
   useEffect(() => {
-    const onScroll = () => {
-      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
-      if (nearBottom && !loading) loadMore();
-    };
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [loadMore, loading]);
+    const handler = setTimeout(() => setDebouncedTitle(searchTitle), 300);
+    return () => clearTimeout(handler);
+  }, [searchTitle]);
 
   useEffect(() => {
-    setAllResults([]);
+    setMovies([]);
     setPage(1);
     setHasMore(true);
-    loadMore();
-  }, [searchTitle, selectedYear, sortOption, selectedGenre]);
+    setEmptyResult(false);
+  }, [debouncedTitle, selectedYear, selectedRating]);
 
-  const applySort = useCallback((movies) => {
-    let sorted = [...movies];
-    switch (sortOption) {
-      case 'az': sorted.sort((a, b) => a.title.localeCompare(b.title)); break;
-      case 'za': sorted.sort((a, b) => b.title.localeCompare(a.title)); break;
-      case 'rating': sorted.sort((a, b) => parseFloat(b.imdbRating || 0) - parseFloat(a.imdbRating || 0)); break;
-      case 'year': sorted.sort((a, b) => b.year - a.year); break;
-      default: break;
-    }
-    return sorted;
-  }, [sortOption]);
+  useEffect(() => {
+    const fetchMovies = async () => {
+      NProgress.start();
+      try {
+        const data = await getBasicMovies(debouncedTitle, selectedYear, page);
+        let filtered = data;
 
-  const displayedResults = applySort(allResults);
+        if (selectedRating) {
+          const [min, max] = selectedRating.split('-').map(Number);
+          filtered = data.filter(m => {
+            const rating = parseFloat(m.imdbRating);
+            return !isNaN(rating) && rating >= min && rating <= max;
+          });
+        }
+
+        if (filtered.length === 0 && page === 1) setEmptyResult(true);
+        else setEmptyResult(false);
+
+        setMovies(prev => [...prev, ...filtered]);
+        if (filtered.length < MAX_RESULTS_PER_PAGE) setHasMore(false);
+      } catch (err) {
+        console.error('❌ Failed to load movies:', err);
+        setHasMore(false);
+      } finally {
+        NProgress.done();
+      }
+    };
+
+    fetchMovies();
+  }, [debouncedTitle, selectedYear, selectedRating, page]);
+
+  const lastMovieRef = useCallback(node => {
+    if (!hasMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) setPage(prev => prev + 1);
+    });
+    if (node) observer.current.observe(node);
+  }, [hasMore]);
 
   return (
-    <div className="movies-page">
+    <div style={{ backgroundColor: '#121212', minHeight: '100vh', color: '#f0f0f0' }}>
       <div className="search-container">
         <input
           type="text"
@@ -102,6 +82,7 @@ export default function MoviesAll() {
           onChange={(e) => setSearchTitle(e.target.value)}
           className="search-input"
         />
+
         <div className="filters-row">
           <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
             <option value="">Any Year</option>
@@ -110,24 +91,13 @@ export default function MoviesAll() {
             ))}
           </select>
 
-          <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="filter-select">
-            <option value="">Sort</option>
-            <option value="az">A–Z</option>
-            <option value="za">Z–A</option>
-            <option value="rating">IMDb Rating</option>
-            <option value="year">Year</option>
-          </select>
-
-          <select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} className="filter-select">
-            <option value="">All Genres</option>
-            <option value="Action">Action</option>
-            <option value="Drama">Drama</option>
-            <option value="Horror">Horror</option>
-            <option value="Comedy">Comedy</option>
-            <option value="Sci-Fi">Sci-Fi</option>
-            <option value="Romance">Romance</option>
-            <option value="Thriller">Thriller</option>
-            <option value="Crime">Crime</option>
+          <select value={selectedRating} onChange={(e) => setSelectedRating(e.target.value)} className="filter-select">
+            <option value="">All Ratings</option>
+            <option value="1-3">1–3</option>
+            <option value="4-5">4–5</option>
+            <option value="6-7">6–7</option>
+            <option value="8-9">8–9</option>
+            <option value="9-10">9–10</option>
           </select>
 
           <a href="/movies-grid" className="btn-outline" style={{ marginLeft: 'auto' }}>
@@ -136,16 +106,21 @@ export default function MoviesAll() {
         </div>
       </div>
 
-      <div className="movie-grid">
-        {displayedResults.map(movie => (
-          <MovieCard key={movie.imdbID} movie={movie} />
+      <div className="movie-card-grid">
+        {movies.map((movie, i) => (
+          <div key={movie.imdbID} ref={i === movies.length - 1 ? lastMovieRef : null}>
+            <MovieCardText movie={movie} />
+          </div>
         ))}
       </div>
 
-      {loading && <Loader />}
-      {!hasMore && !loading && displayedResults.length > 0 && (
-        <p style={{ textAlign: 'center', marginTop: '2rem' }}>🎉 You've reached the end!</p>
+      {emptyResult && (
+        <div style={{ textAlign: 'center', color: '#ccc', paddingTop: '1rem' }}>
+          ❌ No movies found with the selected filters.
+        </div>
       )}
+
+      {hasMore && <Loader />}
     </div>
   );
 }

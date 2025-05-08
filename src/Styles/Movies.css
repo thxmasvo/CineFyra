@@ -268,3 +268,9 @@
   color: #ffffff;
   box-shadow: 0 0 6px #c99cff55;
 }
+.movie-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 2rem;
+}
