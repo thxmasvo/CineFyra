@@ -105,7 +105,13 @@ export default function MoviesGrid() {
   }, [debouncedTitle, selectedYear, selectedRating]);
 
   return (
-    <div style={{ backgroundColor: '#121212', minHeight: '100vh', color: '#f0f0f0' }}>
+   <div
+        style={{
+          backgroundColor: 'var(--bg-dark)',
+          minHeight: '100vh',
+          color: 'var(--text-light)',
+        }}
+      >
       <div className="search-container">
         <input
           type="text"
