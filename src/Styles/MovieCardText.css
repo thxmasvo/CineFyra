@@ -6,28 +6,36 @@
 
 .movie-card-text {
   background-color: var(--card-bg);
+  border: 1px solid var(--border-color, #e0e0e0); /* fallback if no var */
   border-radius: 12px;
   padding: 1rem;
   text-align: center;
   color: var(--text-light);
-  width: 180px;
+  width: 200px;
   height: 360px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); /* subtle shadow for both modes */
   overflow: hidden;
-  transition: transform 0.2s ease, background-color 0.3s, color 0.3s;
+  transition: transform 0.2s ease, background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.movie-card-text p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
 }
 
 .movie-card-text:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent-hover);
+  background-color: var(--section-bg);
 }
 
 .movie-title {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #fff;
 }
