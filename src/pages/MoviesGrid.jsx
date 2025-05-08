@@ -11,9 +11,8 @@ import '../Styles/Movies.css';
 
 ModuleRegistry.registerModules([InfiniteRowModelModule]);
 
-const MAX_CONCURRENT = 8;
+const MAX_CONCURRENT = 4;
 const MAX_RESULTS_PER_PAGE = 10;
-const MAX_PAGES_TO_FETCH = 30;
 
 export default function MoviesGrid() {
   const gridRef = useRef();
@@ -28,59 +27,73 @@ export default function MoviesGrid() {
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedTitle(searchTitle), 400);
+    const handler = setTimeout(() => setDebouncedTitle(searchTitle), 300);
     return () => clearTimeout(handler);
   }, [searchTitle]);
 
-  const columnDefs = useMemo(() => [
-    { headerName: 'Title', field: 'title', flex: 2 },
-    { headerName: 'Year', field: 'year', width: 100 },
-    { headerName: 'IMDb Rating', field: 'imdbRating', width: 120 },
-    { headerName: 'Genre', field: 'genres', flex: 2 },
-  ], []);
+const columnDefs = useMemo(() => [
+  { headerName: 'Title', field: 'title', flex: 2,  maxWidth: 600},
+  { headerName: 'Year', field: 'year', width: 100 },
+  {
+    headerName: 'Rated',
+    field: 'classification',
+    width: 100,
+    valueGetter: (params) => params.data?.classification || 'N/A',
+  },
+  {
+    headerName: 'IMDb',
+    field: 'imdbRating',
+    width: 100,
+    valueGetter: (params) => params.data?.imdbRating ?? 'N/A',
+  },
+  {
+    headerName: 'Rotten',
+    field: 'rottenTomatoesRating',
+    width: 100,
+    valueGetter: (params) => params.data?.rottenTomatoesRating ?? 'N/A',
+  },
+  {
+    headerName: 'Metacritic',
+    field: 'metacriticRating',
+    width: 100,
+    valueGetter: (params) => params.data?.metacriticRating ?? 'N/A',
+  }
+], []);
+
 
   const datasource = useMemo(() => ({
     async getRows(params) {
-      const { startRow } = params;
+      const { startRow, endRow } = params;
+      const pageNum = Math.floor(startRow / MAX_RESULTS_PER_PAGE) + 1;
       NProgress.start();
 
       try {
-        let allMovies = [];
-        let currentPage = 1;
-
-        while (allMovies.length < MAX_RESULTS_PER_PAGE * 3 && currentPage <= MAX_PAGES_TO_FETCH) {
-          const raw = await getMovies(debouncedTitle, selectedYear || '', currentPage);
-          if (!raw || raw.length === 0) break;
-          allMovies.push(...raw);
-          currentPage++;
+        const raw = await getMovies(debouncedTitle, selectedYear || '', pageNum);
+        if (!raw || raw.length === 0) {
+          params.successCallback([], startRow);
+          return;
         }
 
-        const enriched = [];
-        let i = 0;
+        const movies = Array.from(new Map(raw.map(m => [m.imdbID, m])).values());
 
-        const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
-          while (i < allMovies.length) {
-            const idx = i++;
-            const movie = allMovies[idx];
-
+        const enriched = await Promise.all(
+          movies.map(async (movie) => {
             if (enrichedCache.current.has(movie.imdbID)) {
-              enriched.push(enrichedCache.current.get(movie.imdbID));
-              continue;
+              return enrichedCache.current.get(movie.imdbID);
             }
-
             try {
-              await delay(200);
               const details = await getMovieDetails(movie.imdbID);
               const full = { ...movie, ...details };
               enrichedCache.current.set(movie.imdbID, full);
-              enriched.push(full);
-            } catch (err) {
-              enriched.push(movie);
+              await delay(100);
+              return full;
+            } catch {
+              return movie;
             }
-          }
-        });
+          })
+        );
 
-        await Promise.all(workers);
+        console.log('📦 Enriched Sample:', enriched[0]);
 
         const filtered = enriched.filter((movie) => {
           let genreMatch = true;
@@ -104,8 +117,8 @@ export default function MoviesGrid() {
           return genreMatch && yearMatch;
         });
 
-        const slice = filtered.slice(0, MAX_RESULTS_PER_PAGE);
-        const lastRow = slice.length < MAX_RESULTS_PER_PAGE ? startRow + slice.length : undefined;
+        const slice = filtered.slice(0, endRow - startRow);
+        const lastRow = filtered.length < MAX_RESULTS_PER_PAGE ? startRow + slice.length : undefined;
         params.successCallback(slice, lastRow);
       } catch (err) {
         console.error('❌ Grid load failed:', err);
@@ -122,45 +135,47 @@ export default function MoviesGrid() {
     }
   }, [debouncedTitle, selectedYear, selectedGenre]);
 
-  return (
-    <div style={{ backgroundColor: '#121212', minHeight: '100vh', color: '#f0f0f0' }}>
-      {/* Search + Filters */}
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search by title..."
-          value={searchTitle}
-          onChange={(e) => setSearchTitle(e.target.value)}
-          className="search-input"
-        />
-        <div className="filters-row">
-          <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
-            <option value="">Any Year</option>
-            {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i).reverse().map((year) => (
-              <option key={year} value={String(year)}>{year}</option>
-            ))}
-          </select>
-          <select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} className="filter-select">
-            <option value="">All Genres</option>
-            <option value="Action">Action</option>
-            <option value="Drama">Drama</option>
-            <option value="Horror">Horror</option>
-            <option value="Comedy">Comedy</option>
-            <option value="Sci-Fi">Sci-Fi</option>
-            <option value="Romance">Romance</option>
-            <option value="Thriller">Thriller</option>
-            <option value="Crime">Crime</option>
-          </select>
-          <a href="/movies-all" className="btn-outline" style={{ marginLeft: 'auto' }}>
-            Switch to Card View
-          </a>
-        </div>
+return (
+  <div style={{ backgroundColor: '#121212', minHeight: '100vh', color: '#f0f0f0' }}>
+    <div className="search-container">
+      <input
+        type="text"
+        placeholder="Search by title..."
+        value={searchTitle}
+        onChange={(e) => setSearchTitle(e.target.value)}
+        className="search-input"
+      />
+      <div className="filters-row">
+        <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
+          <option value="">Any Year</option>
+          {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i).reverse().map((year) => (
+            <option key={year} value={String(year)}>{year}</option>
+          ))}
+        </select>
+        <select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} className="filter-select">
+          <option value="">All Genres</option>
+          <option value="Action">Action</option>
+          <option value="Drama">Drama</option>
+          <option value="Horror">Horror</option>
+          <option value="Comedy">Comedy</option>
+          <option value="Sci-Fi">Sci-Fi</option>
+          <option value="Romance">Romance</option>
+          <option value="Thriller">Thriller</option>
+          <option value="Crime">Crime</option>
+        </select>
+        <a href="/movies-all" className="btn-outline" style={{ marginLeft: 'auto' }}>
+          Switch to Card View
+        </a>
       </div>
+    </div>
 
+    {/* ➕ Centered container */}
+    <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '3rem' }}>
       <div
         className="ag-theme-quartz"
         style={{
           height: '80vh',
+          maxWidth: '55vw',
           width: '100%',
           padding: '2rem',
           backgroundColor: '#121212',
@@ -180,5 +195,7 @@ export default function MoviesGrid() {
         />
       </div>
     </div>
-  );
+  </div>
+);
+
 }

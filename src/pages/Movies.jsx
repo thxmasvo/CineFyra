@@ -184,16 +184,17 @@ export default function Movies() {
           value={searchTitle}
           onChange={(e) => setSearchTitle(e.target.value)}
           className="search-input"
+          aria-label="Search movies by title"
         />
         {searchTitle.trim() !== '' && (
           <div className="filters-row">
-            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
+            <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select" aria-label="Filter by year">
               <option value="">Any Year</option>
               {Array.from({ length: 2023 - 1990 + 1 }, (_, i) => 1990 + i).reverse().map((year) => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
-            <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="filter-select">
+            <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="filter-select" aria-label="Sort movies">
               <option value="">Sort</option>
               <option value="az">A–Z</option>
               <option value="za">Z–A</option>
@@ -215,7 +216,7 @@ export default function Movies() {
           ) : (
             <div className="movie-grid">
               {displayedSearchResults.map((movie) => (
-                <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} />
+                <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} altText={`Poster for ${movie.title}`} />
               ))}
             </div>
           )}
@@ -237,7 +238,7 @@ export default function Movies() {
                 <MovieRow title="👶 Children’s Picks" rowId="kids" movies={kids} scrollRow={scrollRow} />
               )}
               <div className="update-section">
-                <div className="emoji">👋</div>
+                <div className="emoji" role="img" aria-label="Waving hand">👋</div>
                 <p>Didn't find something to watch yet? We got you. Try one of these options instead:</p>
                 <div className="update-buttons">
                   <button onClick={() => {
@@ -264,11 +265,11 @@ function MovieRow({ title, rowId, movies, scrollRow }) {
       <div className="movie-scroll-wrapper">
         <div className="movie-scroll-row" id={rowId}>
           {movies.map((movie) => (
-            <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} />
+            <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} altText={`Poster for ${movie.title}`} />
           ))}
         </div>
-        <button className="scroll-button left" onClick={() => scrollRow(rowId, 'left')}>&lt;</button>
-        <button className="scroll-button right" onClick={() => scrollRow(rowId, 'right')}>&gt;</button>
+        <button className="scroll-button left" aria-label="Scroll left" onClick={() => scrollRow(rowId, 'left')}>&lt;</button>
+        <button className="scroll-button right" aria-label="Scroll right" onClick={() => scrollRow(rowId, 'right')}>&gt;</button>
       </div>
     </div>
   );
