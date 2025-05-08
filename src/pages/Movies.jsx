@@ -6,36 +6,27 @@ import '../Styles/Movies.css';
 import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
-// Throttle, concurrency, and UX delay config
 const DEBOUNCE_DELAY = 500;
 const MAX_CONCURRENT = 4;
 const MAX_SEARCH_RESULTS = 10;
 const MIN_FETCH_DURATION = 1000;
 
 export default function Movies() {
-  // User input & sorting state
   const [searchTitle, setSearchTitle] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [sortOption, setSortOption] = useState('');
-
-  // Fetched movies
   const [searchResults, setSearchResults] = useState([]);
   const [curatedMovies, setCuratedMovies] = useState([]);
-
-  // Pagination + loading flags
   const [searchPage, setSearchPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  // Refs for deduping and cancelling
   const enrichedCache = useRef(new Map());
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
   const requestIdRef = useRef(0);
-
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-  // Fetch + enrich movies with full details (rate limited + cached)
   const fetchMoviesWithEnrichment = async (title = '', pageNum = 1, shouldAbort = () => false, limit = null) => {
     const baseMovies = await getMovies(title, '', pageNum);
     let filtered = title
@@ -46,7 +37,6 @@ export default function Movies() {
     let i = 0;
     const enriched = [];
 
-    // Concurrent enrichment
     const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
       while (i < filtered.length && !shouldAbort()) {
         const idx = i++;
@@ -58,13 +48,13 @@ export default function Movies() {
         }
 
         try {
-          await delay(200); // avoid API 429
+          await delay(200);
           const details = await getMovieDetails(movie.imdbID);
           const full = { ...movie, ...details };
           enrichedCache.current.set(movie.imdbID, full);
           enriched.push(full);
         } catch {
-          enriched.push(movie); // fallback if enrich fails
+          enriched.push(movie);
         }
       }
     });
@@ -73,7 +63,6 @@ export default function Movies() {
     return enriched;
   };
 
-  // Initial load and debounce logic
   const loadInitial = useCallback((title) => {
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
@@ -121,7 +110,6 @@ export default function Movies() {
     return () => abortRef.current?.abort();
   }, [searchTitle, loadInitial]);
 
-  // Infinite scroll pagination
   const fetchNextSearchPage = useCallback(async () => {
     if (!searchTitle.trim() || loading || !hasMore) return;
     const currentRequestId = ++requestIdRef.current;
@@ -145,7 +133,6 @@ export default function Movies() {
     }
   }, [searchTitle, searchPage, loading, hasMore]);
 
-  // Hook: Watch scroll to trigger infinite scroll
   useEffect(() => {
     const handleScroll = () => {
       const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 500;
@@ -161,7 +148,6 @@ export default function Movies() {
     Array.isArray(genres) ? genres.map(g => g.trim()) :
     typeof genres === 'string' ? genres.split(',').map(g => g.trim()) : [];
 
-  // Local filtering/sorting (client-side only)
   const applySortAndFilter = useCallback((movies) => {
     let filtered = [...movies];
     if (selectedYear) {
@@ -179,7 +165,6 @@ export default function Movies() {
     return filtered;
   }, [sortOption, selectedYear]);
 
-  // Curated sections
   const topRated = curatedMovies.filter(m => parseFloat(m.imdbRating) >= 7.6).slice(0, 10);
   const horror = curatedMovies.filter(m => normalizeGenres(m.genres).includes('Horror')).slice(0, 10);
   const kids = curatedMovies.filter(m => ['G', 'PG'].includes(m.classification)).slice(0, 10);
@@ -192,7 +177,6 @@ export default function Movies() {
 
   return (
     <div className="movies-page">
-      {/* Search input + optional filters */}
       <div className="search-container">
         <input
           type="text"
@@ -201,7 +185,6 @@ export default function Movies() {
           onChange={(e) => setSearchTitle(e.target.value)}
           className="search-input"
         />
-
         {searchTitle.trim() !== '' && (
           <div className="filters-row">
             <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="filter-select">
@@ -210,7 +193,6 @@ export default function Movies() {
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
-
             <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="filter-select">
               <option value="">Sort</option>
               <option value="az">A–Z</option>
@@ -226,7 +208,6 @@ export default function Movies() {
 
       {searchTitle.trim() !== '' ? (
         <>
-          {/* Search Results */}
           {displayedSearchResults.length === 0 && !loading ? (
             <p style={{ textAlign: 'center', marginTop: '2rem' }}>
               🔍 No results found for "{searchTitle}"
@@ -255,7 +236,6 @@ export default function Movies() {
               {kids.length > 0 && (
                 <MovieRow title="👶 Children’s Picks" rowId="kids" movies={kids} scrollRow={scrollRow} />
               )}
-
               <div className="update-section">
                 <div className="emoji">👋</div>
                 <p>Didn't find something to watch yet? We got you. Try one of these options instead:</p>
@@ -277,7 +257,6 @@ export default function Movies() {
   );
 }
 
-// MovieRow component: horizontal scroll row of movie cards
 function MovieRow({ title, rowId, movies, scrollRow }) {
   return (
     <div className="section">

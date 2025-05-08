@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AgGridReact } from 'ag-grid-react';
 import { ModuleRegistry } from 'ag-grid-community';
 import { InfiniteRowModelModule } from 'ag-grid-community';
@@ -17,6 +18,7 @@ const MAX_PAGES_TO_FETCH = 30;
 export default function MoviesGrid() {
   const gridRef = useRef();
   const enrichedCache = useRef(new Map());
+  const navigate = useNavigate();
 
   const [searchTitle, setSearchTitle] = useState('');
   const [debouncedTitle, setDebouncedTitle] = useState('');
@@ -174,6 +176,7 @@ export default function MoviesGrid() {
           maxBlocksInCache={10}
           animateRows
           rowHeight={60}
+          onRowClicked={(e) => navigate(`/movies/${e.data.imdbID}`)}
         />
       </div>
     </div>

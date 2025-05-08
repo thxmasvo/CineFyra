@@ -8,27 +8,39 @@
   --accent-hover: #bfbfbf;
 }
 
+/* Reset + Base Layout */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body {
+html, body, #root {
+  height: 100%;
+  font-family: 'Segoe UI', sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-light);
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', sans-serif;
   transition: background-color 0.3s, color 0.3s;
+}
+
+/* Flex Layout for Sticky Footer */
+.app-layout {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
+main {
+  flex: 1;
+}
+
+/* Links */
 a {
   text-decoration: none;
   color: inherit;
 }
 
+/* Home Page Container */
 .home-container {
   display: flex;
   flex-direction: column;
@@ -36,7 +48,6 @@ a {
 }
 
 /* NAVBAR */
-
 .main-navbar {
   width: 100%;
   background-color: var(--nav-bg);
@@ -64,7 +75,7 @@ a {
 
 .nav-links a {
   font-size: 1rem;
-  color: var(--text-color);
+  color: var(--text-light);
   transition: color 0.3s ease;
 }
 
@@ -88,7 +99,6 @@ a {
 }
 
 /* HERO SECTION */
-
 .hero-content {
   flex-grow: 1;
   display: flex;
@@ -130,4 +140,3 @@ a {
 .btn-primary:hover {
   background-color: var(--accent-hover);
 }
-

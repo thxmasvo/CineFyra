@@ -47,13 +47,21 @@
   flex-direction: column;
   justify-content: center;
   flex-grow: 1;
+  width: 100%;
+  padding-top: 0.5rem;
 }
 
+/* Title and rating styling */
 .movie-info p {
   margin: 0.15rem 0;
   font-size: 0.95rem;
   line-height: 1.2;
+  color: var(--text-light);
+  text-align: center;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 3;        /* ⬅️ Limit to 2 lines */
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  white-space: nowrap;
   text-overflow: ellipsis;
 }

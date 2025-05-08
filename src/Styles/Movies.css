@@ -1,8 +1,14 @@
 /* Overall page styling */
+
 .movies-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   padding: 2rem;
-  background-color: var(--bg-dark);
+  background-color: var(--section-bg);
   color: var(--text-light);
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* Search Bar Container */
@@ -68,12 +74,13 @@
 
 /* Movie Card Grid */
 .movie-grid {
+  flex-grow: 1;        /* ⬅️ allow it to expand */
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem;
   margin-top: 2rem;
+  min-height: 300px;   /* fallback height for small result sets */
 }
-
 /* Section headers */
 .section {
   margin-bottom: 3rem;
@@ -151,7 +158,7 @@
 /* Update Message */
 .update-section {
   text-align: center;
-  padding: 4rem 1rem 6rem;
+  padding: 1rem 2rem 1.5rem;
   background: linear-gradient(to top, var(--section-bg) 0%, transparent 100%);
   color: var(--text-light);
 }
@@ -206,27 +213,16 @@
   background: var(--section-bg);
 }
 
-/* AG Grid theming */
-.ag-theme-quartz {
-  background-color: var(--section-bg);
-  color: var(--text-light);
-  transition: background-color 0.3s ease;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-}
 
 :root .ag-theme-quartz {
-  --ag-background-color: var(--bg-dark);
+  --ag-background-color: var(--section-bg);
   --ag-foreground-color: var(--text-light);
   --ag-header-background-color: var(--card-bg);
   --ag-header-foreground-color: var(--text-light);
   --ag-borders: none;
   --ag-row-hover-color: var(--section-bg);
   --ag-odd-row-background-color: var(--section-bg);
-  --ag-even-row-background-color: var(--bg-dark);
+  --ag-even-row-background-color: var(--card-bg);
   --ag-font-size: 14px;
   --ag-row-border-color: #2a2a2a;
   --ag-selected-row-background-color: #2d2d2d;
