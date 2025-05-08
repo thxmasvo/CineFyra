@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { getMovies, getMovieDetails } from '../api';
+import { getEnrichedMovies } from '../api';
 import MovieCard from '../components/MovieCard';
 import Loader from '../components/Loader';
 import '../Styles/Movies.css';
@@ -7,7 +7,6 @@ import NProgress from 'nprogress';
 import 'nprogress/nprogress.css';
 
 const DEBOUNCE_DELAY = 500;
-const MAX_CONCURRENT = 4;
 const MAX_SEARCH_RESULTS = 10;
 const MIN_FETCH_DURATION = 1000;
 
@@ -21,47 +20,10 @@ export default function Movies() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const enrichedCache = useRef(new Map());
   const debounceRef = useRef(null);
   const abortRef = useRef(null);
   const requestIdRef = useRef(0);
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-
-  const fetchMoviesWithEnrichment = async (title = '', pageNum = 1, shouldAbort = () => false, limit = null) => {
-    const baseMovies = await getMovies(title, '', pageNum);
-    let filtered = title
-      ? baseMovies.filter(m => m.title?.toLowerCase().includes(title.toLowerCase()))
-      : baseMovies;
-    if (limit) filtered = filtered.slice(0, limit);
-
-    let i = 0;
-    const enriched = [];
-
-    const workers = new Array(MAX_CONCURRENT).fill(0).map(async () => {
-      while (i < filtered.length && !shouldAbort()) {
-        const idx = i++;
-        const movie = filtered[idx];
-
-        if (enrichedCache.current.has(movie.imdbID)) {
-          enriched.push(enrichedCache.current.get(movie.imdbID));
-          continue;
-        }
-
-        try {
-          await delay(200);
-          const details = await getMovieDetails(movie.imdbID);
-          const full = { ...movie, ...details };
-          enrichedCache.current.set(movie.imdbID, full);
-          enriched.push(full);
-        } catch {
-          enriched.push(movie);
-        }
-      }
-    });
-
-    await Promise.all(workers);
-    return enriched;
-  };
 
   const loadInitial = useCallback((title) => {
     if (abortRef.current) abortRef.current.abort();
@@ -78,7 +40,7 @@ export default function Movies() {
       try {
         if (title.trim()) {
           setSearchPage(2);
-          const enriched = await fetchMoviesWithEnrichment(title, 1, shouldAbort, MAX_SEARCH_RESULTS);
+          const enriched = await getEnrichedMovies(title, 1);
           const elapsed = Date.now() - startTime;
           if (elapsed < MIN_FETCH_DURATION) await delay(MIN_FETCH_DURATION - elapsed);
           if (!shouldAbort() && currentRequestId === requestIdRef.current) {
@@ -87,7 +49,7 @@ export default function Movies() {
             setHasMore(enriched.length >= MAX_SEARCH_RESULTS);
           }
         } else {
-          const enriched = await fetchMoviesWithEnrichment('', 1, shouldAbort);
+          const enriched = await getEnrichedMovies('', 1);
           if (!shouldAbort() && currentRequestId === requestIdRef.current) {
             setCuratedMovies(enriched);
             setSearchResults([]);
@@ -117,7 +79,7 @@ export default function Movies() {
     NProgress.start();
 
     try {
-      const enriched = await fetchMoviesWithEnrichment(searchTitle, searchPage);
+      const enriched = await getEnrichedMovies(searchTitle, searchPage);
       if (requestIdRef.current === currentRequestId) {
         setSearchResults(prev => [...prev, ...enriched]);
         setSearchPage(prev => prev + 1);
@@ -216,7 +178,7 @@ export default function Movies() {
           ) : (
             <div className="movie-grid">
               {displayedSearchResults.map((movie) => (
-                <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} altText={`Poster for ${movie.title}`} />
+                <MovieCard key={movie.imdbID} movie={movie} />
               ))}
             </div>
           )}
@@ -265,7 +227,7 @@ function MovieRow({ title, rowId, movies, scrollRow }) {
       <div className="movie-scroll-wrapper">
         <div className="movie-scroll-row" id={rowId}>
           {movies.map((movie) => (
-            <MovieCard key={movie.imdbID} movie={movie} poster={movie.poster} altText={`Poster for ${movie.title}`} />
+            <MovieCard key={movie.imdbID} movie={movie} />
           ))}
         </div>
         <button className="scroll-button left" aria-label="Scroll left" onClick={() => scrollRow(rowId, 'left')}>&lt;</button>

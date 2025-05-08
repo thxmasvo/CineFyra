@@ -2,12 +2,11 @@ import { Link } from 'react-router-dom';
 import { getMovieDetails } from '../api';
 import '../Styles/MovieCard.css';
 
-export default function MovieCard({ movie, poster }) {
+export default function MovieCard({ movie }) {
   return (
     <Link
       to={`/movies/${movie.imdbID}`}
       className="movie-card-link"
-      // Preload movie details on hover for smoother navigation
       onMouseEnter={() => {
         getMovieDetails(movie.imdbID).catch(() => {});
       }}
@@ -15,18 +14,17 @@ export default function MovieCard({ movie, poster }) {
       <div className="movie-card">
         <div className="poster-container">
           <img
-            src={poster}
-            alt={movie.title}
+            src={movie.poster}
+            alt={`Poster for ${movie.title}`}
             className="movie-poster"
-            // Fallback image for broken poster URLs
             onError={(e) => {
               e.target.src = 'https://upload.wikimedia.org/wikipedia/commons/f/fc/No_picture_available.png';
             }}
           />
         </div>
         <div className="movie-info">
-          <p style={{ fontWeight: 'bold' }}>{movie.title}</p>
-          <p>IMDb: {movie.imdbRating || 'N/A'}</p>
+          <p className="movie-title">{movie.title}</p>
+          <p className="movie-rating">IMDb: {movie.imdbRating || 'N/A'}</p>
         </div>
       </div>
     </Link>

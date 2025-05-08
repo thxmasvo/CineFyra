@@ -26,5 +26,5 @@ html, body {
   background-color: var(--bg-dark);
   color: var(--text-light);
   transition: background-color 0.3s, color 0.3s;
-  height: 100%;
+
 }

@@ -1,63 +1,116 @@
 import { refreshToken, logoutUser } from './utils/auth';
 
-// Search for movies by title/year/page
-export function getMovies(title = '', year = '', page = 1, genre = '', signal) {
-  const baseUrl = 'http://4.237.58.241:3000/movies/search';
+const BASE = 'http://4.237.58.241:3000';
+
+/* -------------------------
+   Basic search
+------------------------- */
+export async function getBasicMovies(title = '', year = '', page = 1, signal) {
   const params = new URLSearchParams();
   if (title) params.append('title', title);
   if (year) params.append('year', year);
-  if (genre) params.append('genre', genre);
   params.append('page', page);
 
-  return fetch(`${baseUrl}?${params.toString()}`, signal ? { signal } : {})
-    .then(res => res.json())
-    .then(res => res.data || []);
-}
+  const res = await fetch(`${BASE}/movies/search?${params.toString()}`, signal ? { signal } : {});
 
-
-// Fetch detailed movie data by IMDb ID
-export async function getMovieDetails(imdbID, signal) {
-  const res = await fetch(`${BASE}/movies/data/${imdbID}`, { signal });
-  const contentType = res.headers.get('content-type');
-
-  if (!res.ok) {
-    const errorText = await res.text(); // fallback if not JSON
-    throw new Error(errorText || `HTTP ${res.status}`);
+  // 429 Rate Limit
+  if (res.status === 429) {
+    const text = await res.text();
+    throw new Error(`🚫 Rate limit hit: ${text}`);
   }
 
-  if (!contentType || !contentType.includes('application/json')) {
+  // Not JSON
+  const contentType = res.headers.get('content-type') || '';
+  if (!res.ok || !contentType.includes('application/json')) {
     const text = await res.text();
-    throw new Error(`Expected JSON but got: ${text}`);
+    throw new Error(`❌ Unexpected response: ${text}`);
+  }
+
+  const data = await res.json();
+  return data.data || [];
+}
+
+/* -------------------------
+   Full movie details
+------------------------- */
+export async function getMovieDetails(imdbID, signal) {
+  const res = await fetch(`${BASE}/movies/data/${imdbID}`, signal ? { signal } : {});
+
+  if (res.status === 429) {
+    const text = await res.text();
+    throw new Error(`🚫 Rate limit hit: ${text}`);
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!res.ok || !contentType.includes('application/json')) {
+    const text = await res.text();
+    throw new Error(`❌ Unexpected response: ${text}`);
   }
 
   return res.json();
 }
 
-// Fetch person details (protected route)
+/* -------------------------
+   Enriched (curated) movies
+------------------------- */
+export async function getEnrichedMovies(title = '', page = 1, limit = null, signal) {
+  const baseMovies = await getBasicMovies(title, '', page, signal);
+  const filtered = limit ? baseMovies.slice(0, limit) : baseMovies;
+
+  const enriched = [];
+
+  for (const movie of filtered) {
+    try {
+      const res = await fetch(`${BASE}/movies/data/${movie.imdbID}`, signal ? { signal } : {});
+
+      if (res.status === 429) {
+        const text = await res.text();
+        throw new Error(`🚫 Rate limit hit (details): ${text}`);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok || !contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error(`❌ Unexpected detail response: ${text}`);
+      }
+
+      const details = await res.json();
+      enriched.push({ ...movie, ...details });
+
+      // Slow down to avoid rate limit
+      await new Promise(res => setTimeout(res, 200));
+    } catch (err) {
+      console.warn(`⚠️ Could not enrich ${movie.title}:`, err.message);
+      enriched.push(movie); // fallback to base data
+    }
+  }
+
+  return enriched;
+}
+
+/* -------------------------
+   Protected: Person Details
+------------------------- */
 export async function getPersonDetails(id) {
-  const url = `http://4.237.58.241:3000/people/${id}`;
+  const url = `${BASE}/people/${id}`;
   let token = localStorage.getItem('cinefyra-token');
 
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  let res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
   });
 
-  // Token might be expired — try refresh
   if (res.status === 401) {
-    console.warn('🔄 Token expired, attempting refresh...');
+    console.warn('🔄 Token expired, refreshing...');
     try {
       token = await refreshToken();
-      const retry = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!retry.ok) throw new Error(await retry.text());
-      return await retry.json();
+
+      if (!res.ok) throw new Error(await res.text());
+      return await res.json();
     } catch (err) {
-      console.error('❌ Token refresh failed:', err.message);
+      console.error('❌ Refresh failed:', err.message);
       logoutUser();
       throw new Error('Session expired. Please log in again.');
     }
@@ -67,9 +120,11 @@ export async function getPersonDetails(id) {
   return await res.json();
 }
 
-// Register user
+/* -------------------------
+   Auth: Register / Login
+------------------------- */
 export async function registerUser(email, password) {
-  const res = await fetch('http://4.237.58.241:3000/users/register', {
+  const res = await fetch(`${BASE}/users/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -80,9 +135,8 @@ export async function registerUser(email, password) {
   return data;
 }
 
-// Log in user and persist tokens
 export async function loginUser(email, password) {
-  const res = await fetch('http://4.237.58.241:3000/users/login', {
+  const res = await fetch(`${BASE}/users/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
