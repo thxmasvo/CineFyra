@@ -1,22 +1,23 @@
 .loader-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 4rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 5px solid rgba(255, 255, 255, 0.2);         /* fallback */
+  border: 5px solid rgba(var(--text-light-rgb, 255, 255, 255), 0.2);
+  border-top-color: var(--text-light, #ffffff);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+  transition: border-color 0.3s ease;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
-  
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 5px solid rgba(255, 255, 255, 0.2);
-    border-top-color: #ffffff;
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
+}

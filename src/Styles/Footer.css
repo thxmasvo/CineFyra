@@ -1,12 +1,16 @@
-/* src/Styles/Footer.css */
 .footer {
-  background-color: #121212;
-  color: #fff;
-  padding: 20px;
+  background-color: var(--section-bg);
+  color: var(--text-light);
+  padding: 1.5rem 2rem;
   text-align: center;
   font-size: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s, color 0.3s;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .footer p {
   margin: 0;
+  line-height: 1.5;
+  color: var(--text-muted);
 }

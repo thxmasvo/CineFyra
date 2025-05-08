@@ -1,8 +1,8 @@
 /* Overall page styling */
 .movies-page {
   padding: 2rem;
-  background-color: #121212;
-  color: #f0f0f0;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
 }
 
 /* Search Bar Container */
@@ -10,12 +10,13 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background-color: #121212;
+  background-color: var(--section-bg);
   padding: 1.2rem 0 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.3s;
 }
 
 /* Search Input */
@@ -27,17 +28,17 @@
   border-radius: 999px;
   border: none;
   outline: none;
-  background-color: #1e1e1e;
-  color: #ffffff;
+  background-color: var(--card-bg);
+  color: var(--text-light);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease, background-color 0.3s, color 0.3s;
 }
 
 .search-input:focus {
   box-shadow: 0 0 0 2px #ffffff30;
 }
 
-/* Filters below search */
+/* Filters */
 .filters-row {
   margin-top: 0.8rem;
   display: flex;
@@ -51,8 +52,8 @@
   font-size: 0.95rem;
   border-radius: 12px;
   border: 1px solid #333;
-  background-color: #1e1e1e;
-  color: #f0f0f0;
+  background-color: var(--card-bg);
+  color: var(--text-light);
   box-shadow: 0 0 0 1px #444;
   appearance: none;
   transition: all 0.3s ease;
@@ -61,8 +62,8 @@
 .filter-select:hover,
 .filter-select:focus {
   border-color: #c99cff;
+  background-color: var(--section-bg);
   outline: none;
-  background-color: #272727;
 }
 
 /* Movie Card Grid */
@@ -73,7 +74,7 @@
   margin-top: 2rem;
 }
 
-/* Section headers like Top Rated */
+/* Section headers */
 .section {
   margin-bottom: 3rem;
 }
@@ -85,7 +86,7 @@
   margin-bottom: 0.5rem;
 }
 
-/* Horizontal Scroll Area */
+/* Horizontal scroll row */
 .movie-scroll-wrapper {
   position: relative;
   display: flex;
@@ -106,7 +107,7 @@
   display: none;
 }
 
-/* Scroll Buttons */
+/* Scroll buttons */
 .scroll-button {
   position: absolute;
   top: 50%;
@@ -139,7 +140,7 @@
   right: 0;
 }
 
-/* Loading spinner alignment */
+/* Loader */
 .loader-container {
   display: flex;
   justify-content: center;
@@ -147,11 +148,12 @@
   padding: 4rem 0;
 }
 
+/* Update Message */
 .update-section {
   text-align: center;
   padding: 4rem 1rem 6rem;
-  background: linear-gradient(to top, #0d0d0d 0%, transparent 100%);
-  color: white;
+  background: linear-gradient(to top, var(--section-bg) 0%, transparent 100%);
+  color: var(--text-light);
 }
 
 .update-section .emoji {
@@ -179,7 +181,7 @@
 
 .update-section p {
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-muted);
   margin-bottom: 1.5rem;
 }
 
@@ -190,9 +192,9 @@
 }
 
 .update-buttons button {
-  background: #2c2c2c;
+  background: var(--card-bg);
   border: none;
-  color: white;
+  color: var(--text-light);
   padding: 0.7rem 1.2rem;
   font-weight: 500;
   border-radius: 8px;
@@ -201,28 +203,34 @@
 }
 
 .update-buttons button:hover {
-  background: #444;
+  background: var(--section-bg);
 }
 
-/* === Dark Mode Quartz Customization === */
+/* AG Grid theming */
+.ag-theme-quartz {
+  background-color: var(--section-bg);
+  color: var(--text-light);
+  transition: background-color 0.3s ease;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
 
 :root .ag-theme-quartz {
-  --ag-background-color: #121212;
-  --ag-foreground-color: #f0f0f0;
-  --ag-header-background-color: #1e1e1e;
-  --ag-header-foreground-color: #f0f0f0;
+  --ag-background-color: var(--bg-dark);
+  --ag-foreground-color: var(--text-light);
+  --ag-header-background-color: var(--card-bg);
+  --ag-header-foreground-color: var(--text-light);
   --ag-borders: none;
-  --ag-row-hover-color: #1f1f1f;
-  --ag-odd-row-background-color: #181818;
-  --ag-even-row-background-color: #121212;
+  --ag-row-hover-color: var(--section-bg);
+  --ag-odd-row-background-color: var(--section-bg);
+  --ag-even-row-background-color: var(--bg-dark);
   --ag-font-size: 14px;
   --ag-row-border-color: #2a2a2a;
   --ag-selected-row-background-color: #2d2d2d;
   --ag-font-family: 'Inter', sans-serif;
-
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-  overflow: hidden;
 }
 
 /* Header row enhancements */
@@ -235,25 +243,11 @@
   display: flex;
   align-items: center;
 }
-/* === Make AG Grid Scrollbars Invisible === */
 
+/* Hide AG scrollbars */
 .ag-theme-quartz ::-webkit-scrollbar {
   width: 0px;
   height: 0px;
-}
-
-.ag-theme-quartz ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ag-theme-quartz ::-webkit-scrollbar-thumb {
-  background-color: transparent;
-  border: none;
-}
-
-.ag-theme-quartz {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .btn-outline {
@@ -261,8 +255,8 @@
   font-size: 0.95rem;
   border-radius: 12px;
   border: 1px solid #333;
-  background-color: #1e1e1e;
-  color: #f0f0f0;
+  background-color: var(--card-bg);
+  color: var(--text-light);
   box-shadow: 0 0 0 1px #444;
   transition: all 0.3s ease;
   text-decoration: none;
@@ -272,9 +266,7 @@
 
 .btn-outline:hover {
   border-color: #c99cff;
-  background-color: #272727;
+  background-color: var(--section-bg);
   color: #ffffff;
   box-shadow: 0 0 6px #c99cff55;
 }
-
-

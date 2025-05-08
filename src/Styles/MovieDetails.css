@@ -1,9 +1,10 @@
 .details-container {
   padding: 2rem;
-  background-color: #111;
-  color: #eee;
+  background-color: var(--section-bg);
+  color: var(--text-light);
   max-width: 1200px;
   margin: auto;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .details-header {
@@ -16,7 +17,7 @@
   width: 240px;
   border-radius: 12px;
   object-fit: cover;
-  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
 }
 
 .details-info {
@@ -31,7 +32,7 @@
 
 .plot {
   font-style: italic;
-  color: #ccc;
+  color: var(--text-muted);
   margin-bottom: 1rem;
 }
 
@@ -137,10 +138,10 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  background: #181818;
+  background: var(--card-bg);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
 .cast-table th,
@@ -150,34 +151,40 @@
 }
 
 .cast-table th {
-  background-color: #222;
-  color: #f0f0f0;
+  background-color: var(--section-bg);
+  color: var(--text-light);
   font-weight: bold;
 }
 
 .cast-table tr:nth-child(even) {
-  background-color: #1a1a1a;
+  background-color: var(--bg-dark);
 }
 
 .back-button {
   position: absolute;
-   top: 5.5rem; /* ← Adjust this if your navbar is taller */
+  top: 5.5rem;
   left: 2rem;
-  background: transparent;
-  color: #f1f1f1;
-  border: 2px solid #888;
+  background-color: transparent;
+  color: var(--text-light);
+  border: 2px solid var(--accent);
   padding: 0.4rem 1rem;
   border-radius: 6px;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
   z-index: 999;
+  transition: all 0.2s ease;
+  opacity: 1 !important;
+  filter: none !important;
 }
 
+
 .back-button:hover {
-  background: #444;
-  border-color: #ccc;
+  background-color: var(--accent-hover);
+  color: var(--bg-dark);
+  border-color: var(--text-light);
 }
+
 
 .person-link {
   color: #007aff;

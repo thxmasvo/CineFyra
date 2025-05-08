@@ -1,13 +1,12 @@
 :root {
-  --bg-dark: #1a1a1a;
-  --nav-bg: #222222;
+  --bg-dark: #121212;
+  --section-bg: #1a1a1a;
+  --card-bg: #1e1e1e;
   --text-light: #f5f5f5;
-  --accent: #999999; /* soft gray */
+  --text-muted: #cccccc;
+  --accent: #999999;
   --accent-hover: #bfbfbf;
-  --btn-gradient-start: #dcdcdc;
-  --btn-gradient-end: #a6a6a6;
 }
-
 
 * {
   margin: 0;
@@ -16,12 +15,13 @@
 }
 
 html, body {
-  width: 100%;
-  min-height: 100vh;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  margin: 0;
+  padding: 0;
   font-family: 'Segoe UI', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  overflow-x: hidden;
+  transition: background-color 0.3s, color 0.3s;
+  min-height: 100vh;
 }
 
 a {
@@ -130,3 +130,4 @@ a {
 .btn-primary:hover {
   background-color: var(--accent-hover);
 }
+

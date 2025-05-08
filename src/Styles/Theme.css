@@ -1,0 +1,29 @@
+:root[data-theme='dark'] {
+  --bg-dark: #121212;
+  --text-light: #ffffff;
+  --text-muted: #cccccc;
+  --card-bg: #1e1e1e;
+  --section-bg: #181818;
+  --accent: #999999;
+  --accent-hover: #bfbfbf;
+  --btn-gradient-start: #a855f7;
+  --btn-gradient-end: #ec4899;
+}
+
+:root[data-theme='light'] {
+  --bg-dark: #f9f9f9;
+  --text-light: #1a1a1a;
+  --text-muted: #444444;
+  --card-bg: #ffffff;
+  --section-bg: #f0f0f0;
+  --accent: #333333;
+  --accent-hover: #666666;
+  --btn-gradient-start: #6366f1;
+  --btn-gradient-end: #ec4899;
+}
+
+html, body {
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  transition: background-color 0.3s, color 0.3s;
+}

@@ -9,16 +9,22 @@ function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoggedIn(isLoggedIn()); // Sync state on mount
-  }, []);
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const handleLogout = async () => {
-    await logoutUser(); // Clears tokens and session
+    await logoutUser();
     setLoggedIn(false);
     navigate('/');
+  };
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   return (
@@ -31,11 +37,14 @@ function Navbar() {
         <div className="nav-center">
           <Link to="/">Home</Link>
           <Link to="/movies">Movies</Link>
-           <Link to="/movies-grid">Browse</Link>
-
+          <Link to="/movies-grid">Browse</Link>
         </div>
 
         <div className="nav-right">
+          <button className="theme-toggle" onClick={toggleTheme}>
+            {theme === 'dark' ? '🌞 Light Mode' : '🌙 Dark Mode'}
+          </button>
+
           {loggedIn ? (
             <div className="nav-user">
               <span className="user-email">{getUserEmail()}</span>
@@ -56,7 +65,7 @@ function Navbar() {
         <SignInModal
           onClose={() => {
             setShowSignIn(false);
-            setLoggedIn(isLoggedIn()); // Recheck after modal closes
+            setLoggedIn(isLoggedIn());
           }}
         />
       )}
@@ -65,7 +74,7 @@ function Navbar() {
         <SignUpModal
           onClose={() => {
             setShowSignUp(false);
-            setLoggedIn(isLoggedIn()); // Recheck after modal closes
+            setLoggedIn(isLoggedIn());
           }}
         />
       )}

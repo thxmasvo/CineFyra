@@ -8,6 +8,7 @@ import MoviesAll from './pages/MoviesAll';
 import PersonDetails from './pages/PersonDetails';
 import Footer from './components/Footer';
 import MoviesGrid from './pages/MoviesGrid';
+import './Styles/Theme.css';
 
 function App() {
   return (
