@@ -104,7 +104,7 @@
   display: flex;
   gap: 1rem;
   overflow-x: auto;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   scroll-behavior: smooth;
   scrollbar-width: none;
   width: 100%;
@@ -268,9 +268,11 @@
   color: #ffffff;
   box-shadow: 0 0 6px #c99cff55;
 }
+
 .movie-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-  padding: 2rem;
-}
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+   gap: 1.5rem;          /* spacing between cards */
+   padding: 2rem;
+   justify-items: center; /* centers cards inside their grid cells */
+ }
